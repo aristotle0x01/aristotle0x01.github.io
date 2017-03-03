@@ -329,6 +329,112 @@
             
               
                 
+                <a class="post-title-link" href="/2017/03/03/intellij build/" itemprop="url">
+                  build h2database source code under intellij idea
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-03-03T18:12:01+08:00" content="2017-03-03">
+              2017-03-03
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/03/03/intellij build/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/03/intellij build/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="pom-xml"><a href="#pom-xml" class="headerlink" title="pom.xml"></a>pom.xml</h3><p>h2代码并未直接使用mvn编译，而是使用了mvnw。并且其目标码为java1.6，而其mvn又依赖1.7。为了解决这个问题其使用了maven-toolchains-plugin：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">&lt;!-- Maven requires at least JRE 1.7 but we want to build with JDK 1.6 --&gt;</div><div class="line">      &lt;plugin&gt;</div><div class="line">        &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;</div><div class="line">        &lt;artifactId&gt;maven-toolchains-plugin&lt;/artifactId&gt;</div><div class="line">        &lt;version&gt;1.1&lt;/version&gt;</div><div class="line">        &lt;executions&gt;</div><div class="line">          &lt;execution&gt;</div><div class="line">            &lt;goals&gt;</div><div class="line">              &lt;goal&gt;toolchain&lt;/goal&gt;</div><div class="line">            &lt;/goals&gt;</div><div class="line">          &lt;/execution&gt;</div><div class="line">        &lt;/executions&gt;</div><div class="line">        &lt;configuration&gt;</div><div class="line">          &lt;toolchains&gt;</div><div class="line">            &lt;jdk&gt;</div><div class="line">              &lt;version&gt;1.6&lt;/version&gt;</div><div class="line">            &lt;/jdk&gt;</div><div class="line">          &lt;/toolchains&gt;</div><div class="line">        &lt;/configuration&gt;</div><div class="line">      &lt;/plugin&gt;</div></pre></td></tr></table></figure></p>
+<p>此外，为了检查代码中没有使用jdk1.6之外的东西，又用了如下插件：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">&lt;!-- Make sure we are not using anything outside JDK 1.6 --&gt;</div><div class="line">      &lt;plugin&gt;</div><div class="line">        &lt;groupId&gt;org.codehaus.mojo&lt;/groupId&gt;</div><div class="line">        &lt;artifactId&gt;animal-sniffer-maven-plugin&lt;/artifactId&gt;</div><div class="line">        &lt;version&gt;1.15&lt;/version&gt;</div><div class="line">        &lt;executions&gt;</div><div class="line">          &lt;execution&gt;</div><div class="line">            &lt;id&gt;check-java-api&lt;/id&gt;</div><div class="line">            &lt;phase&gt;test&lt;/phase&gt;</div><div class="line">            &lt;goals&gt;</div><div class="line">              &lt;goal&gt;check&lt;/goal&gt;</div><div class="line">            &lt;/goals&gt;</div><div class="line">          &lt;/execution&gt;</div><div class="line">        &lt;/executions&gt;</div><div class="line">        &lt;configuration&gt;</div><div class="line">          &lt;signature&gt;</div><div class="line">            &lt;groupId&gt;org.codehaus.mojo.signature&lt;/groupId&gt;</div><div class="line">            &lt;artifactId&gt;java16&lt;/artifactId&gt;</div><div class="line">            &lt;version&gt;1.1&lt;/version&gt;</div><div class="line">          &lt;/signature&gt;</div><div class="line">        &lt;/configuration&gt;</div><div class="line">      &lt;/plugin&gt;</div></pre></td></tr></table></figure></p>
+<p>仅为学习和调试源码的情况下，可以将上述两个插件去掉，避免编译错误。</p>
+<h3 id="idea-配置"><a href="#idea-配置" class="headerlink" title="idea 配置"></a>idea 配置</h3><p>1.添加依赖库<br><img src="http://ohz440knb.bkt.clouddn.com/h2-buildQQ%E5%9B%BE%E7%89%8720170303165203.png" alt="h2依赖库"></p>
+<p>2.设置文件路径<br><img src="http://ohz440knb.bkt.clouddn.com/h2-buildQQ%E5%9B%BE%E7%89%8720170303165232.png" alt="路径设置"></p>
+<p>特别注意：h2/src/tools要设置在”Test Source Folders”下面，否则会有文件找不到import</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/12/03/kafka offsets management/" itemprop="url">
                   kafka offsets management in spark streaming
                 </a>
@@ -702,7 +808,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-count">4</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -779,8 +885,8 @@
       <div class="footer-inner">
         <div class="copyright" >
   
-  &copy; 
-  <span itemprop="copyrightYear">2016</span>
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

@@ -102,57 +102,15 @@
 
 
 
-<meta name="description" content="在消费kafka消息的时候，可能会有疑问，消息里是否自带schema，schema是如何在反序列化消息的时候起作用的。实际上在conflument平台上，kafka消息格式如下：
-
-
-
-Bytes
-Area
-Description
-
-
-
-
-0
-Magic Byte
-Confluent serialization format version number; currently always 0.">
-<meta property="og:type" content="article">
-<meta property="og:title" content="kafka schema of the Confluent platform">
-<meta property="og:url" content="https://selfpoised.github.io/2016/12/03/kafka schema/index.html">
+<meta name="description" content="圣人不死，盗贼不止">
+<meta property="og:type" content="website">
+<meta property="og:title" content="selfpoised's blog">
+<meta property="og:url" content="https://selfpoised.github.io/archives/2017/index.html">
 <meta property="og:site_name" content="selfpoised's blog">
-<meta property="og:description" content="在消费kafka消息的时候，可能会有疑问，消息里是否自带schema，schema是如何在反序列化消息的时候起作用的。实际上在conflument平台上，kafka消息格式如下：
-
-
-
-Bytes
-Area
-Description
-
-
-
-
-0
-Magic Byte
-Confluent serialization format version number; currently always 0.">
-<meta property="og:image" content="http://ohz440knb.bkt.clouddn.com/kafka%20schema14547664_340090316367092_266735473584504832_n.jpg">
-<meta property="og:updated_time" content="2016-12-10T14:45:36.212Z">
+<meta property="og:description" content="圣人不死，盗贼不止">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="kafka schema of the Confluent platform">
-<meta name="twitter:description" content="在消费kafka消息的时候，可能会有疑问，消息里是否自带schema，schema是如何在反序列化消息的时候起作用的。实际上在conflument平台上，kafka消息格式如下：
-
-
-
-Bytes
-Area
-Description
-
-
-
-
-0
-Magic Byte
-Confluent serialization format version number; currently always 0.">
-<meta name="twitter:image" content="http://ohz440knb.bkt.clouddn.com/kafka%20schema14547664_340090316367092_266735473584504832_n.jpg">
+<meta name="twitter:title" content="selfpoised's blog">
+<meta name="twitter:description" content="圣人不死，盗贼不止">
 
 
 
@@ -173,10 +131,10 @@ Confluent serialization format version number; currently always 0.">
 
 
 
-  <link rel="canonical" href="https://selfpoised.github.io/2016/12/03/kafka schema/"/>
+  <link rel="canonical" href="https://selfpoised.github.io/archives/2017/"/>
 
 
-  <title> kafka schema of the Confluent platform | selfpoised's blog </title>
+  <title> 归档 | selfpoised's blog </title>
 </head>
 
 <body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
@@ -216,7 +174,7 @@ Confluent serialization format version number; currently always 0.">
     
   
 
-  <div class="container one-collumn sidebar-position-left page-post-detail ">
+  <div class="container one-collumn sidebar-position-left  page-archive  ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
@@ -347,207 +305,73 @@ Confluent serialization format version number; currently always 0.">
           <div id="content" class="content">
             
 
-  <div id="posts" class="posts-expand">
+  <section id="posts" class="posts-collapse">
+    <span class="archive-move-on"></span>
+
+    <span class="archive-page-counter">
+      
+      
+      
+        
+      
+      嗯..! 目前共计 4 篇日志。 继续努力。
+    </span>
+
     
 
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                kafka schema of the Confluent platform
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-12-03T15:36:17+08:00" content="2016-12-03">
-              2016-12-03
-            </time>
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/12/03/kafka schema/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/12/03/kafka schema/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-              &nbsp; | &nbsp;
-              <span class="page-pv">本文总阅读量
-              <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>次
-              </span>
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
+      
       
       
 
-      
-        <p>在消费kafka消息的时候，可能会有疑问，消息里是否自带schema，schema是如何在反序列化<br>消息的时候起作用的。实际上在conflument平台上，kafka消息格式如下：</p>
-<table>
-<thead>
-<tr>
-<th>Bytes</th>
-<th>Area</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>0</td>
-<td>Magic Byte</td>
-<td>Confluent serialization format version number; currently always 0.</td>
-</tr>
-<tr>
-<td>1-4</td>
-<td>Schema ID</td>
-<td>4-byte schema ID as returned by the Schema Registry</td>
-</tr>
-<tr>
-<td>5</td>
-<td>Data</td>
-<td>Avro serialized data in Avro’s binary encoding. The only exception is raw bytes, which will be written directly without any special Avro encoding.</td>
-</tr>
-</tbody>
-</table>
-<hr>
-<h4 id="生产端"><a href="#生产端" class="headerlink" title="生产端"></a>生产端</h4><p>encoder获取schema并且向schema registry请求一个schema id，若已存在则直接返回，若没有则新产生一个并注册<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">import org.apache.avro.Schema;</div><div class="line">import org.apache.avro.generic.GenericData;</div><div class="line">import org.apache.avro.generic.GenericRecord;</div><div class="line">import org.apache.kafka.clients.producer.KafkaProducer;</div><div class="line">import org.apache.kafka.clients.producer.ProducerConfig;</div><div class="line">import org.apache.kafka.clients.producer.ProducerRecord;</div><div class="line">import java.util.Properties;</div><div class="line"></div><div class="line">Properties props = new Properties();</div><div class="line">props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, &quot;localhost:9092&quot;);</div><div class="line">props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,</div><div class="line">          io.confluent.kafka.serializers.KafkaAvroSerializer.class);</div><div class="line">props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,</div><div class="line">          io.confluent.kafka.serializers.KafkaAvroSerializer.class);</div><div class="line">props.put(&quot;schema.registry.url&quot;, &quot;http://localhost:8081&quot;);</div><div class="line">KafkaProducer producer = new KafkaProducer(props);</div><div class="line"></div><div class="line">String key = &quot;key1&quot;;</div><div class="line">String userSchema = &quot;&#123;\&quot;type\&quot;:\&quot;record\&quot;,&quot; +</div><div class="line">                    &quot;\&quot;name\&quot;:\&quot;myrecord\&quot;,&quot; +</div><div class="line">                    &quot;\&quot;fields\&quot;:[&#123;\&quot;name\&quot;:\&quot;f1\&quot;,\&quot;type\&quot;:\&quot;string\&quot;&#125;]&#125;&quot;;</div><div class="line">Schema.Parser parser = new Schema.Parser();</div><div class="line">Schema schema = parser.parse(userSchema);</div><div class="line">GenericRecord avroRecord = new GenericData.Record(schema);</div><div class="line">avroRecord.put(&quot;f1&quot;, &quot;value1&quot;);</div><div class="line"></div><div class="line">ProducerRecord&lt;Object, Object&gt; record = new ProducerRecord&lt;&gt;(&quot;topic1&quot;, key, avroRecord);</div><div class="line">try &#123;</div><div class="line">  producer.send(record);</div><div class="line">&#125; catch(SerializationException e) &#123;</div><div class="line">  // may need to do something with it</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<hr>
-<p><img src="http://ohz440knb.bkt.clouddn.com/kafka%20schema14547664_340090316367092_266735473584504832_n.jpg" alt="indian peacock"></p>
-<hr>
-<h4 id="消费端"><a href="#消费端" class="headerlink" title="消费端"></a>消费端</h4><p>根据shema id从schema registry请求schema，并且在本地缓存<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line">import org.apache.avro.generic.IndexedRecord;</div><div class="line">import kafka.consumer.ConsumerConfig;</div><div class="line">import kafka.consumer.ConsumerIterator;</div><div class="line">import kafka.consumer.KafkaStream;</div><div class="line">import kafka.javaapi.consumer.ConsumerConnector;</div><div class="line">import io.confluent.kafka.serializers.KafkaAvroDecoder;</div><div class="line">import kafka.message.MessageAndMetadata;</div><div class="line">import kafka.utils.VerifiableProperties;</div><div class="line">import org.apache.kafka.common.errors.SerializationException;</div><div class="line">import java.util.*;</div><div class="line"></div><div class="line">Properties props = new Properties();</div><div class="line">props.put(&quot;zookeeper.connect&quot;, &quot;localhost:2181&quot;);</div><div class="line">props.put(&quot;group.id&quot;, &quot;group1&quot;);</div><div class="line">props.put(&quot;schema.registry.url&quot;, &quot;http://localhost:8081&quot;);</div><div class="line"></div><div class="line">String topic = &quot;topic1&quot;;</div><div class="line">Map&lt;String, Integer&gt; topicCountMap = new HashMap&lt;&gt;();</div><div class="line">topicCountMap.put(topic, new Integer(1));</div><div class="line"></div><div class="line">VerifiableProperties vProps = new VerifiableProperties(props);</div><div class="line">KafkaAvroDecoder keyDecoder = new KafkaAvroDecoder(vProps);</div><div class="line">KafkaAvroDecoder valueDecoder = new KafkaAvroDecoder(vProps);</div><div class="line"></div><div class="line">ConsumerConnector consumer = kafka.consumer.Consumer.createJavaConsumerConnector(new ConsumerConfig(props));</div><div class="line"></div><div class="line">Map&lt;String, List&lt;KafkaStream&lt;Object, Object&gt;&gt;&gt; consumerMap = consumer.createMessageStreams(</div><div class="line">    topicCountMap, keyDecoder, valueDecoder);</div><div class="line">KafkaStream stream = consumerMap.get(topic).get(0);</div><div class="line">ConsumerIterator it = stream.iterator();</div><div class="line">while (it.hasNext()) &#123;</div><div class="line">  MessageAndMetadata messageAndMetadata = it.next();</div><div class="line">  try &#123;</div><div class="line">    String key = (String) messageAndMetadata.key();</div><div class="line">    IndexedRecord value = (IndexedRecord) messageAndMetadata.message();</div><div class="line"></div><div class="line">    ...</div><div class="line">  &#125; catch(SerializationException e) &#123;</div><div class="line">    // may need to do something with it</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<hr>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://stackoverflow.com/questions/31204201/apache-kafka-with-avro-and-schema-repo-where-in-the-message-does-the-schema-id" target="_blank" rel="external">Apache Kafka with Avro and Schema Repo - where in the message does the schema Id go?</a><br><a href="http://docs.confluent.io/3.1.1/schema-registry/docs/serializer-formatter.html" target="_blank" rel="external">Serializer and Formatter</a></p>
-
-      
-    </div>
-
-    <div>
       
         
-
-      
-    </div>
-
-    <div>
-      
-        
-
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2016/12/03/hello-strangers/" rel="next" title="Hello Strangers">
-                <i class="fa fa-chevron-left"></i> Hello Strangers
-              </a>
-            
-          </div>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/12/03/kafka offsets management/" rel="prev" title="kafka offsets management in spark streaming">
-                kafka offsets management in spark streaming <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
+        <div class="collection-title">
+          <h2 class="archive-year motion-element" id="archive-year-2017">2017</h2>
         </div>
       
+      
 
       
-      
-    </footer>
+
+  <article class="post post-type-normal" itemscope itemtype="//schema.org/Article">
+    <header class="post-header">
+
+      <h1 class="post-title">
+        
+            <a class="post-title-link" href="/2017/03/03/intellij build/" itemprop="url">
+              
+                <span itemprop="name">build h2database source code under intellij idea</span>
+              
+            </a>
+        
+      </h1>
+
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated"
+              datetime="2017-03-03T18:12:01+08:00"
+              content="2017-03-03" >
+          03-03
+        </time>
+      </div>
+
+    </header>
   </article>
 
 
 
-    <div class="post-spread">
-      
-        <!-- JiaThis Button BEGIN -->
-<div class="jiathis_style">
-  <a class="jiathis_button_tsina"></a>
-  <a class="jiathis_button_tqq"></a>
-  <a class="jiathis_button_weixin"></a>
-  <a class="jiathis_button_cqq"></a>
-  <a class="jiathis_button_douban"></a>
-  <a class="jiathis_button_renren"></a>
-  <a class="jiathis_button_qzone"></a>
-  <a class="jiathis_button_kaixin001"></a>
-  <a class="jiathis_button_copy"></a>
-  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
-  <a class="jiathis_counter_style"></a>
-</div>
-<script type="text/javascript" >
-  var jiathis_config={
-    hideMore:false
-  }
-</script>
-<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
-<!-- JiaThis Button END -->
+    
 
-      
-    </div>
-  </div>
+  </section>
+
+  
+
 
 
           </div>
           
 
-  <p>热评文章</p>
-  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
-
 
           
-  <div class="comments" id="comments">
-    
-      <div class="ds-thread" data-thread-key="2016/12/03/kafka schema/"
-           data-title="kafka schema of the Confluent platform" data-url="https://selfpoised.github.io/2016/12/03/kafka schema/">
-      </div>
-    
-  </div>
-
 
         </div>
         
@@ -567,17 +391,8 @@ Confluent serialization format version number; currently always 0.">
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview sidebar-panel ">
+      <section class="site-overview sidebar-panel  sidebar-panel-active ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/pumpkin-151180__180.png"
@@ -651,17 +466,6 @@ Confluent serialization format version number; currently always 0.">
 
       </section>
 
-      
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-            
-              
-            
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#生产端"><span class="nav-number">1.</span> <span class="nav-text">生产端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消费端"><span class="nav-number">2.</span> <span class="nav-text">消费端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
-            
-          </div>
-        </section>
       
 
     </div>
@@ -781,9 +585,11 @@ Confluent serialization format version number; currently always 0.">
 
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
-
+  
+    <script type="text/javascript" id="motion.page.archive">
+      $('.archive-year').velocity('transition.slideLeftIn');
+    </script>
+  
 
 
   
