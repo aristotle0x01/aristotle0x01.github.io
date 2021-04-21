@@ -1,6 +1,8 @@
 ---
 layout: post
 title: this is first try using jekyll
+date:   2019-11-09 18:07:11 -0600
+categories: jekyll update
 ---
 #first
 
