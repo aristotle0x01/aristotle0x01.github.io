@@ -1,7 +1,8 @@
 theme: jekyll-theme-minimal
 
-
 timezone: Asia/Shanghai
+
+includes: _posts/
 
 plugins:
 - jekyll-github-metadata
