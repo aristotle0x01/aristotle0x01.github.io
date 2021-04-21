@@ -2,6 +2,8 @@ theme: jekyll-theme-minimal
 
 repository: selfpoised/selfpoised.github.io
 
+timezone: Asia/Shanghai
+
 plugins:
 - jekyll-github-metadata
 - jekyll-mentions
