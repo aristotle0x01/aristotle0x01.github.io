@@ -1,1 +1,10 @@
 theme: jekyll-theme-minimal
+
+repository: selfpoised/selfpoised.github.io
+
+plugins:
+- jekyll-github-metadata
+- jekyll-mentions
+- jekyll-redirect-from
+- jekyll-sitemap
+- jemoji

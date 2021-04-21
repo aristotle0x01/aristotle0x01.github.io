@@ -1,0 +1,7 @@
+---
+layout: post
+title: this is first try using jekyll
+---
+#first
+
+this is a test
