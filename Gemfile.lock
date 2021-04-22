@@ -66,7 +66,7 @@ GEM
     unicode-display_width (1.7.0)
 
 PLATFORMS
-  ruby
+  universal-darwin-19
 
 DEPENDENCIES
   jekyll (~> 4.2.0)
