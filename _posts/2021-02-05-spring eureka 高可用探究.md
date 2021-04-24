@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "spring eureka 高可用探究"
+date:   2021-02-05
+categories: eureka 注册中心 spring-cloud
+---
 # spring eureka 高可用探究
 
 为啥要研究这玩意？
