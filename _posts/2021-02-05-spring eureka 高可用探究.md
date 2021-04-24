@@ -16,7 +16,7 @@
 
 
 
-## 1. 咱们是咋玩的
+## 1. 鄙司玩法
 
 ### 1.1 client端
 
@@ -258,3 +258,30 @@ tcpdump -tttt -s0 -X -vv tcp port 8501 -w captcha.cap
 
 ![image](https://user-images.githubusercontent.com/2216435/115951537-d74c5e00-a513-11eb-932e-93441f0038af.png)
 
+
+
+## 8 实践遇到的一些问题
+### 8.1 注册中心不更新服务状态
+**现象**：关停服务，注册中心不再将该服务状态置为"down"，也不删除该实例
+
+**分析**：
+
+1）测试关停不同服务（spring cloud版本不同，2.1.2及以下），tcpdump抓包，发现低版本在关闭的时候会主动向注册中心发送状态更新数据，而高版本不会
+
+![image](https://user-images.githubusercontent.com/2216435/115952139-fe585f00-a516-11eb-9a7a-b76973a0c991.png)
+
+2）eureka注册中心进入self-preservation状态
+
+此时，lease expiration enabled 为false
+
+![image](https://user-images.githubusercontent.com/2216435/115952082-bc2f1d80-a516-11eb-8ebd-2b9fb6d9d98e.png)
+
+**解决及结论**
+
+最终重启了eureka注册中心，让其走出self-preservation模式，主动靠心跳检测下线已关停服务
+
+得出了两个结论
+
+1）重启注册中心会担心注册信息丢失和恢复速度，看到有文章说服务只是在启动的时候才会注册，那就需要重启所有服务造成较大影响，其实不然，每次心跳即可作为注册信息，此次得到验证
+
+2）服务关停时向注册中心主动发送状态更新消息是一种方式(受spring cloud版本影响)，靠注册中心的心跳探活机制是另外一种机制
