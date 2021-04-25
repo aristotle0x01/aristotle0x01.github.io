@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "spring eureka 高可用探究"
+title:  "使用tcpdump剖析spring eureka功能"
 date:   2021-02-05
-categories: eureka 注册中心 spring-cloud
+categories: eureka 注册中心 spring-cloud tcpdump
 ---
 # spring eureka 高可用探究
 
