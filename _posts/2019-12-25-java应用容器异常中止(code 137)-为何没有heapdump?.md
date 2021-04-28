@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "java应用之容器内存溢出被杀死"
+title:  "java应用容器异常中止(code 137)-为何没有heapdump?"
 date:   2019-12-25 11:29:35 +0800
 categories: java docker container
 ---

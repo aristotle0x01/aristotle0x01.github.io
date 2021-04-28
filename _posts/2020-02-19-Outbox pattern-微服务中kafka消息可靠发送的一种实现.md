@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "一种微服务消息可靠推送的方式"
+title:  "Outbox pattern-微服务中kafka消息可靠发送的一种实现"
 date:   2020-02-19 11:29:35 +0800
-categories: 微服务 消息 可靠性
+categories: 微服务 消息 kafka 可靠性 Outbox
 ---
 # 一种微服务消息可靠推送的方式
 ![hot pushup chick](https://user-images.githubusercontent.com/2216435/74813297-230fe000-5330-11ea-9849-82b0a44999b4.jpg)
