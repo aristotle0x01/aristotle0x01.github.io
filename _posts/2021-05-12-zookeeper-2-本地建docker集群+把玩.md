@@ -91,13 +91,13 @@ services:
 
 有两种方式
 
-### **1. 命令方式**
+#### **1. 命令方式**
 
 本地命令，根据端口选择登录不同节点
 
 `zkCli.sh -server 127.0.0.1:2182`
 
-### **2. docker方式**
+#### **2. docker方式**
 
 1) 首先确认zk集群使用的network
 
@@ -116,13 +116,13 @@ services:
 
 ## 玩一玩
 
-### 各节点admin
+#### 各节点admin
 
 ![admin](https://user-images.githubusercontent.com/2216435/117957480-b3c74700-b34c-11eb-9b30-9b14137d45fc.png)
 
 可以访问各节点，查看相关信息
 
-### 操作
+#### 操作
 
 对节点的create,delete,stat,addWatch等进行测试，尤其是临时节点，序列节点等
 
@@ -134,7 +134,7 @@ services:
 
 ## tcpdump数据分析
 
-### 创建tcpdump镜像
+#### 创建tcpdump镜像
 
 为什么不直接使用本地命令呢？是为了方便通过“--net=container:your id” attach到其它container上
 
@@ -149,7 +149,7 @@ CMD tcpdump -i eth0
 EOF
 ```
 
-### 启动命令
+#### 启动命令
 
 ```
 docker run -v /your/local/folder:/tcpdump --tty --net=container:"your container id" tcpdump tcpdump -tttt -s0 -X -vv tcp port 2181 -w /tcpdump/captcha.cap
@@ -165,7 +165,7 @@ docker run --tty --net=container:6628d9a4e3e5 tcpdump tcpdump -N -A 'port 8080'
 
 因为是tcp通信，所以具体数据还需要进一步开发脚本解析
 
-### ref
+#### ref
 
 [How to TCPdump effectively in Docker](https://xxradar.medium.com/how-to-tcpdump-effectively-in-docker-2ed0a09b5406)
 
