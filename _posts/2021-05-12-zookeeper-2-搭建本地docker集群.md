@@ -1,10 +1,10 @@
 ---
 layout: post
-title:  "zookeeper-2-本地建docker集群+把玩"
+title:  "zookeeper-2-搭建本地docker集群"
 date:   2021-05-12
 categories: zookeeper
 ---
-# zookeeper-2-本地建docker集群+把玩
+# zookeeper-2-搭建本地docker集群
 
 可以通过已有或者官方的dockerfile一键compose整个zk集群，方便把玩
 
