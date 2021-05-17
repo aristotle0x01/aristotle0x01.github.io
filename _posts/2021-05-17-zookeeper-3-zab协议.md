@@ -42,7 +42,7 @@ leading    // 主节点状态，表示节点处于领导地位
 
 ![3 phases](https://user-images.githubusercontent.com/2216435/118471675-96262300-b73a-11eb-8dfc-51e7bb8fbd17.png)
 
-这三阶段有个前提，就是已经找出了唯一潜在leader(prospective leader)，这个部分大部分文献没将，后面再说
+这三阶段有个前提，就是已经找出了唯一潜在leader(prospective leader)，这个部分大部分文献没讲，后面再说
 
 ### discovery
 
@@ -97,10 +97,6 @@ leading    // 主节点状态，表示节点处于领导地位
 此时leader接受客户端变更请求，利用zab协议，将数据同步到quorum节点
 
 ![](https://user-images.githubusercontent.com/2216435/118478213-303d9980-b742-11eb-8efc-18c14cda4d4c.png)
-
-
-
-![](https://user-images.githubusercontent.com/2216435/118478322-4fd4c200-b742-11eb-84a9-3eb806384d70.png)
 
 ## 重要参考
 
