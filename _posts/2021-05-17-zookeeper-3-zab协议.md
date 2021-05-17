@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "zookeeper-2-zab协议"
+title:  "zookeeper-3-zab协议"
 date:   2021-05-17
 categories: zookeeper zab leader
 ---
