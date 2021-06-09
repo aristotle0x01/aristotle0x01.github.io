@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "java锁,AQS和Condition"
+title:  "java锁,协作与线程-1-Monitor,AQS和Condition"
 date:   2021-06-02
-categories: java synchronization lock cooperation 同步 协作 aqs condition
+categories: java synchronization lock cooperation 同步 协作 AQS condition monitor
 ---
 ## java对象之lock
 
