@@ -169,7 +169,11 @@ class JavaThread: public Thread {
 
 ## 参考
 
+
+
 [HotSpot Runtime Overview: Thread Management](https://openjdk.java.net/groups/hotspot/docs/RuntimeOverview.html#Thread%20Management|outline)
+
+
 
 [Distinguishing between Java threads and OS threads?](https://stackoverflow.com/questions/1888160/distinguishing-between-java-threads-and-os-threads)
 
