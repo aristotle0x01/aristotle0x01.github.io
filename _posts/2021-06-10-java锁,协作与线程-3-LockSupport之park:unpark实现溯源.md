@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "java锁,协作与线程-3-LockSupport之park/unpark实现溯源"
-date:   2021-06-09
+date:   2021-06-10
 categories: java thread hotspot jvm locksupport park unpark futex
 ---
 AQS是jdk中锁实现的基类，而其底层实现依赖于LockSuport的park()/unpark()方法
