@@ -1,0 +1,364 @@
+---
+layout: post
+title:  "java锁,协作与线程-3-LockSupport之park/unpark实现溯源"
+date:   2021-06-09
+categories: java thread hotspot jvm locksupport park unpark futex
+---
+AQS是jdk中锁实现的基类，而其底层实现依赖于LockSuport的park()/unpark()方法
+
+我首先好奇park的英文原意，下面是韦氏大词典的部分解释：
+
+![](https://user-images.githubusercontent.com/2216435/121449922-5404a000-c9cd-11eb-96b8-7d91b595177a.png)
+
+我觉得3.b语意解释比较符合park在锁实现中起的作用，即在某个地方停留一段时间
+
+
+
+## LockSupport
+
+```
+public class LockSupport {
+	// Hotspot implementation via intrinsics API
+	private static final Unsafe U = Unsafe.getUnsafe();
+	private static final long PARKBLOCKER = U.objectFieldOffset(Thread.class, "parkBlocker");
+
+	// Disables the current thread for thread scheduling purposes unless 
+	// the permit is available.
+	public static void park() {
+        U.park(false, 0L);
+  }
+  
+  // Makes available the permit for the given thread, if it was not already available. 
+  // If the thread was blocked on park then it will unblock. Otherwise, its next call to
+  // park is guaranteed not to block. This operation is not guaranteed to have any effect 
+  // at all if the given thread has not been started.
+  public static void unpark(Thread thread) {
+        if (thread != null)
+            U.unpark(thread);
+  }
+}
+```
+
+从上面代码来看，**park/unpark**很简单，主要实现在**Unsafe**类：
+
+```
+public final class Unsafe {
+	public native void unpark(Object thread);
+	
+	public native void park(boolean isAbsolute, long time);
+}
+```
+
+但是Unsafe中的定义是native，也就意味着，得去hotspot源码中看真正的底层实现
+
+
+
+## hotspot中的Unsafe实现
+
+[jdk8u/hotspot/src/share/vm/prims/unsafe.cpp](https://github.com/openjdk/jdk8u/blob/master/hotspot/src/share/vm/prims/unsafe.cpp)
+
+首先看**park**方法
+
+```
+// These are the methods for 1.8.0
+// 方法名映射
+static JNINativeMethod methods_18[] = {
+    ...
+    ...
+    {CC "park",               CC "(ZJ)V",                  FN_PTR(Unsafe_Park)},
+    {CC "unpark",             CC "(" OBJ ")V",               FN_PTR(Unsafe_Unpark)}
+};
+
+UNSAFE_ENTRY(void, Unsafe_Park(JNIEnv *env, jobject unsafe, jboolean isAbsolute, jlong time))
+  UnsafeWrapper("Unsafe_Park");
+  EventThreadPark event;
+  ...
+  JavaThreadParkedState jtps(thread, time != 0);
+  // 重要方法
+  thread->parker()->park(isAbsolute != 0, time);
+	...
+UNSAFE_END
+```
+
+再看**unpark**方法
+
+```
+UNSAFE_ENTRY(void, Unsafe_Unpark(JNIEnv *env, jobject unsafe, jobject jthread))
+  UnsafeWrapper("Unsafe_Unpark");
+  Parker* p = NULL;
+  ...
+  java_thread = JNIHandles::resolve_non_null(jthread);
+  // jvm线程
+  JavaThread* thr = java_lang_Thread::thread(java_thread);
+  p = thr->parker();
+  if (p != NULL) {
+    // 关键点
+    p->unpark();
+  }
+UNSAFE_END
+```
+
+可见，其关键实现在JavaThread中的parker对象
+
+[^版本]: 源码以jdk8u为准版本，下同
+
+
+
+## JavaThread
+
+Java.lang.Thread是jdk应用层面的线程，JavaThread为hotspot中的线程，一一对应，其关系如下
+
+![](https://user-images.githubusercontent.com/2216435/121341870-aa34fd00-c953-11eb-8642-06120633e755.png)
+
+[jdk8u/hotspot/src/share/vm/runtime/thread.hpp->JavaThread](https://github.com/openjdk/jdk8u/blob/master/hotspot/src/share/vm/runtime/thread.hpp)
+
+```
+// Class hierarchy
+// - Thread
+//   - NamedThread
+//     - VMThread
+//     - ConcurrentGCThread
+//     - WorkerThread
+//       - GangWorker
+//       - GCTaskThread
+//   - JavaThread
+//   - WatcherThread
+
+class Thread: public ThreadShadow {
+  
+  protected:
+  // OS data associated with the thread
+  OSThread* _osthread;  // Platform-specific thread information
+  
+  ......
+}
+
+class JavaThread: public Thread {
+	oop          _threadObj; // The Java level thread object
+	
+	// JSR166 per-thread parker
+	private:
+  	Parker*    _parker;  
+  
+  ......
+}
+```
+
+还没到，我们还需要进一步看Parker实现
+
+
+
+## Parker和PlatformParker
+
+[jdk8u/hotspot/src/share/vm/runtime/park.hpp](https://github.com/openjdk/jdk8u/blob/master/hotspot/src/share/vm/runtime/park.hpp)
+
+```
+class Parker : public os::PlatformParker {
+private:
+  // 重要变量，通过0/1表示授权，决定是否阻塞
+  volatile int _counter ;
+  JavaThread * AssociatedWith ; // Current association
+
+public:
+  Parker() : PlatformParker() {
+    _counter       = 0 ;
+    AssociatedWith = NULL ;
+  }
+
+public:
+  void park(bool isAbsolute, jlong time);
+  void unpark();
+  ...
+  ...
+};
+```
+
+Parker继承自os::PlatformParker，也就是说，由各个平台具体实现
+
+
+
+下面我们看linux下的实现：[jdk8u/hotspot/src/os/linux/vm/os_linux.hpp->PlatformParker](https://github.com/openjdk/jdk8u/blob/master/hotspot/src/os/linux/vm/os_linux.hpp)
+
+```
+class PlatformParker : public CHeapObj<mtInternal> {
+    int _cur_index;  // which cond is in use: -1, 0, 1
+    // 锁
+    pthread_mutex_t _mutex [1] ;
+    // 条件变量
+    pthread_cond_t  _cond  [2] ; // one for relative times and one for abs.
+    ...
+    ...
+};
+```
+
+
+
+**park()/unpark()最终实现**：[jdk8u/hotspot/src/os/linux/vm/os_linux.cpp](https://github.com/openjdk/jdk8u/blob/master/hotspot/src/os/linux/vm/os_linux.cpp)
+
+```
+void Parker::park(bool isAbsolute, jlong time) {
+  // 原_counter不为零，有权限，不需等待
+  // _counter 被设置为0
+  if (Atomic::xchg(0, &_counter) > 0) return;
+  
+	// 加锁
+  if (Thread::is_interrupted(thread, false) || pthread_mutex_trylock(_mutex) != 0) {
+    return;
+  }
+
+	......
+	
+  if (time == 0) {
+  	// 等待
+    status = pthread_cond_wait (&_cond[_cur_index], _mutex) ;
+  } else {
+    // 计时等待
+    status = os::Linux::safe_cond_timedwait (&_cond[_cur_index], _mutex, &absTime) ;
+  }
+  
+  ......
+  
+	// 从pthread_cond_wait return表明接收到signal，_counter=1
+	// 授权已经使用一次，作废
+  _counter = 0 ;
+  status = pthread_mutex_unlock(_mutex) ;
+}
+```
+
+```
+void Parker::unpark() {
+  // 整体按照加锁->通知->解锁的顺序
+  int s, status ;
+  status = pthread_mutex_lock(_mutex);
+  s = _counter;
+  _counter = 1;
+  if (s < 1) {
+    // thread might be parked
+    if (_cur_index != -1) {
+      // thread is definitely parked
+      if (WorkAroundNPTLTimedWaitHang) {
+        status = pthread_cond_signal (&_cond[_cur_index]);
+        status = pthread_mutex_unlock(_mutex);
+      } else {
+        int index = _cur_index;
+        status = pthread_mutex_unlock(_mutex);
+        status = pthread_cond_signal (&_cond[index]);
+      }
+    } else {
+      pthread_mutex_unlock(_mutex);
+    }
+  } else {
+    pthread_mutex_unlock(_mutex);
+  }
+}
+```
+
+到这里，我们应该可以说是较为透彻但仅是粗线条的搞清了锁和线程同步底层实现的脉络
+
+
+
+## 类的关系
+
+上面介绍的几个底层实现类，其关系如下
+
+![](https://user-images.githubusercontent.com/2216435/121477019-e6229d80-c9f9-11eb-981e-2f4a65db31e9.png)
+
+
+
+## futex
+
+追踪至**pthread_cond_wait**，可以说明确了实现脉络，其内部究竟如何实现呢？
+
+通过本节参考，使用strace，可以再进一步。示例代码节选自本节参考
+
+```
+#include <stdio.h>
+...
+
+int main() {
+    pthread_cond_t cond;
+    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+    if (initializeCond(&cond)) {
+        return -1;
+    }
+    ...
+    
+    struct timespec start, end, deadline;
+    if (pthread_mutex_lock(&lock)) {
+        return -1;
+    }
+    clock_gettime(CLOCK_TYPE, &start);
+    addNanos(&start, &deadline, deltaNanos);
+
+    int iteration = 0;
+    while (!isDeadlineReached(&deadline)) {
+        // pthread_cond_timedwait(&cond, &lock, &deadline);
+    	  pthread_cond_wait(&cond, &lock);
+        iteration++;;
+    }
+		...
+    clock_gettime(CLOCK_TYPE, &end);
+    return 0;
+}
+```
+
+编译：`gcc test.c -o a.out -lpthread`
+
+追踪：`strace -e futex ./a.out`
+
+![](https://user-images.githubusercontent.com/2216435/121489839-0e64c900-ca07-11eb-804f-cc4d276cc79b.png)
+
+本节参考[LockSupport.parkNanos() Under the Hood and the Curious Case of Parking](https://hazelcast.com/blog/locksupport-parknanos-under-the-hood-and-the-curious-case-of-parking/)
+
+由此可见，**pthread_cond_wait/pthread_cond_timedwait**由futex实现。那么futex又是什么东西呢？留待后续吧
+
+
+
+## java.lang.Object
+
+这块作为对比，放在后面
+
+```
+public class Object {
+  // Causes the current thread to wait until it is awakened,
+  // typically by being notified or interrupted
+	public final void wait() throws InterruptedException {
+        wait(0L);
+  }
+  
+  public final native void wait(long timeoutMillis) throws InterruptedException;
+  
+  // Wakes up a single thread that is waiting on this object's monitor. 
+  // If any threads are waiting on this object, one of them is chosen to be awakened. 
+  // The choice is arbitrary and occurs at the discretion of the implementation. 
+  // A thread waits on an object's monitor by calling one of the wait methods.
+  // 
+  // The awakened thread will not be able to proceed until the current thread 
+  // relinquishes the lock on this object. The awakened thread will compete in the 
+  // usual manner with any other threads that might be actively competing to synchronize 
+  // on this object; for example, the awakened thread enjoys no reliable privilege or
+  // disadvantage in being the next thread to lock this object.
+  // 
+  // This method should only be called by a thread that is the owner of this object's
+  // monitor. A thread becomes the owner of the object's monitor in one of three ways:
+  public final native void notify();
+}
+```
+
+本节**参考**
+
+[Unsafe.park vs Object.wait](https://newbedev.com/unsafe-park-vs-object-wait)
+
+[park与unpark、notify与notifyAll](https://segmentfault.com/a/1190000037681656)
+
+
+
+## 参考
+
+[HotSpot Runtime Overview](https://openjdk.java.net/groups/hotspot/docs/RuntimeOverview.html)
+
+[啃透Java并发-LockSupport源码详解](https://juejin.cn/post/6844903938202796039)
+
+[LockSupport source code reading and analysis](https://www.programmersought.com/article/85695649618/)
+
