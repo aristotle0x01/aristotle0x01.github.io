@@ -4,6 +4,8 @@ title:  "java锁,协作与线程-3-LockSupport之park/unpark实现溯源"
 date:   2021-06-10
 categories: java thread hotspot jvm locksupport park unpark futex
 ---
+## 茴字写法
+
 AQS是jdk中锁实现的基类，而其底层实现依赖于LockSuport的park()/unpark()方法
 
 我首先好奇park的英文原意，下面是韦氏大词典的部分解释：
@@ -265,7 +267,7 @@ void Parker::unpark() {
 
 
 
-## futex
+## pthread_cond_wait？
 
 追踪至**pthread_cond_wait**，可以说明确了实现脉络，其内部究竟如何实现呢？
 
@@ -311,7 +313,27 @@ int main() {
 
 本节参考[LockSupport.parkNanos() Under the Hood and the Curious Case of Parking](https://hazelcast.com/blog/locksupport-parknanos-under-the-hood-and-the-curious-case-of-parking/)
 
-由此可见，**pthread_cond_wait/pthread_cond_timedwait**由futex实现。那么futex又是什么东西呢？留待后续吧
+由此可见，**pthread_cond_wait/pthread_cond_timedwait**由futex实现。那么futex又是什么东西呢？
+
+
+
+## futex
+
+> The `futex()` system call provides a method for waiting until a certain condition becomes true. It is typically used as a blocking construct in the context of shared-memory synchronization. When using futexes, the majority of the synchronization operations are performed in user space. A user-space program employs the `futex()` system call only when it is likely that the program has to block for a longer time until the condition becomes true. Other `futex()` operations can be used to wake any processes or threads waiting for a particular condition.
+
+futex方法里重要的是**FUTEX_WAIT** 和 **FUTEX_WAKE**，基本对应了wait/notify
+
+
+
+何谓fast，大多数情况下，锁是没有竞争的，通过用户态原子操作即可完成，轻量级；少数需要等待情况下，才进入内核态，是谓重量级操作
+
+![](https://user-images.githubusercontent.com/2216435/122011603-dab2e600-cdee-11eb-9bb9-1636a2eb247e.png)
+
+[Basics of Futexes](https://eli.thegreenplace.net/2018/basics-of-futexes/)
+
+[Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux](https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf)
+
+[Linux Locking Mechanisms](https://www.slideshare.net/kerneltlv/linux-locking-mechanisms)
 
 
 
