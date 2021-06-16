@@ -376,6 +376,111 @@ public class Object {
 
 
 
+## 进程或者线程如何sleep和wait()？
+
+锁等待状态需要主动放弃时间片时，底层需要调用常见方法**sleep/wait/yield**，起到释放的作用
+
+我们可以看看**xv6**操作系统是如何实现上面三个方法的，以此管窥linux系统实现
+
+[proc.c](https://github.com/selfpoised/xv6-public/blob/master/proc.c)
+
+```
+// Give up the CPU for one scheduling round.
+void yield(void)
+{
+  acquire(&ptable.lock);  //DOC: yieldlock
+  myproc()->state = RUNNABLE;
+  sched();
+  release(&ptable.lock);
+}
+
+// Wait for a child process to exit and return its pid.
+int wait(void)
+{
+  ...
+  for(;;){
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state == ZOMBIE){
+        // 回收子进程资源
+        pid = p->pid;
+        p->killed = 0;
+        ...
+        p->state = UNUSED;
+        return pid;
+      }
+    }
+
+    sleep(curproc, &ptable.lock);
+  }
+}
+
+void sleep(void *chan, struct spinlock *lk)
+{
+  ...
+  // Go to sleep.
+  p->chan = chan;
+  p->state = SLEEPING;
+
+  sched();
+
+  // Tidy up.
+  p->chan = 0;
+  ...
+}
+```
+
+可见这三个方法的核心是**sched()**
+
+```
+// Enter scheduler
+void sched(void)
+{
+  int intena;
+  struct proc *p = myproc();
+  ...
+  intena = mycpu()->intena;
+  // 切换当前进程上下文，调度器上下文，进入调度器
+  swtch(&p->context, mycpu()->scheduler);
+  mycpu()->intena = intena;
+}
+```
+
+swtch.S是一段汇编代码，保存当前线程寄存器，并将寄存器内容设置为调度器上下文，以此完成切换
+
+```
+# Context switch
+#
+#   void swtch(struct context **old, struct context *new);
+# 
+# Save the current registers on the stack, creating
+# a struct context, and save its address in *old.
+# Switch stacks to new and pop previously-saved registers.
+
+.globl swtch
+swtch:
+  movl 4(%esp), %eax
+  movl 8(%esp), %edx
+
+  # Save old callee-saved registers
+  pushl %ebp
+  pushl %ebx
+  pushl %esi
+  pushl %edi
+
+  # Switch stacks
+  movl %esp, (%eax)
+  movl %edx, %esp
+
+  # Load new callee-saved registers
+  popl %edi
+  popl %esi
+  popl %ebx
+  popl %ebp
+  ret
+```
+
+
+
 ## 参考
 
 [HotSpot Runtime Overview](https://openjdk.java.net/groups/hotspot/docs/RuntimeOverview.html)
