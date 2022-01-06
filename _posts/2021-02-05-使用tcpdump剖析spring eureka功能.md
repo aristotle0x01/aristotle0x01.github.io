@@ -341,5 +341,25 @@ eureka.instance.hostname不能相同
 
 将该项设置为false后即可
 
+如果prefer-ip-address必须为true,则可做如下设置
+
+```
+SPRING_OPTS="
+ --spring.application.name=eureka-cluster 
+ --eureka.instance.appname=eureka-cluster 
+ --eureka.instance.preferIpAddress=true 
+ --eureka.client.serviceUrl.defaultZone=http://ip2:port2/eureka/ 
+ --eureka.instance.hostname=ip1
+ --eureka.instance.ip-address=ip1"
+ 
+ SPRING_OPTS="
+ --spring.application.name=eureka-cluster 
+ --eureka.instance.appname=eureka-cluster 
+ --eureka.instance.preferIpAddress=true 
+ --eureka.client.serviceUrl.defaultZone=http://ip1:port1/eureka/ 
+ --eureka.instance.hostname=ip2
+ --eureka.instance.ip-address=ip2"
+```
+
 ![](https://user-images.githubusercontent.com/2216435/148350024-0d4f9de1-e1ff-4d9d-ac02-c9c7b5853dde.png)
 
