@@ -291,3 +291,55 @@ tcpdump -tttt -s0 -X -vv tcp port 8501 -w captcha.cap
 1）重启注册中心会担心注册信息丢失和恢复速度，看到有文章说服务只是在启动的时候才会注册，那就需要重启所有服务造成较大影响，其实不然，每次心跳即可作为注册信息，此次得到验证
 
 2）服务关停时向注册中心主动发送状态更新消息是一种方式(受spring cloud版本影响)，靠注册中心的心跳探活机制是另外一种机制
+
+### 8.2 unavailable-replicas现象
+
+![](https://user-images.githubusercontent.com/2216435/148346887-95a81e04-ea09-4b93-b2fd-df8f3ab14b6e.png)
+
+如上，两台eureka server互相注册部署后，但是却出现unavailable-replicas现象，服务配置如下
+
+```
+spring:
+  application:
+    name: eureka-cluster
+eureka:
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://host:port/eureka/
+  instance:
+    hostname: host
+    prefer-ip-address: true
+    
+两台server启动命令关键参数：
+  SPRING_OPTS="--spring.application.name=eureka-cluster1 --eureka.client.serviceUrl.defaultZone=http://host2:port2/eureka/ --eureka.instance.hostname=host1"
+  
+  SPRING_OPTS="--spring.application.name=eureka-cluster2 --eureka.client.serviceUrl.defaultZone=http://host1:port1/eureka/ --eureka.instance.hostname=host2"
+```
+
+参考了下列文章：
+
+[Service discovery with Spring Boot Eureka](https://thepracticaldeveloper.com/spring-boot-service-discovery-eureka/)
+
+[eureka集群高可用配置](https://blog.csdn.net/tianyaleixiaowu/article/details/78184793)
+
+[Eureka 集群高可用配置.](https://www.cnblogs.com/eastday/p/10449683.html)
+
+其中的共同点都是：
+
+```
+spring.application.name要相同
+eureka.instance.hostname不能相同
+```
+
+按照上面文章配置后，发现还是不行。最终发现是默认yaml文件里**prefer-ip-address: true**的原因
+
+> 默认情况下，eureka client使用主机名(hostName)向注册中心注册。 
+>
+> 当prefer-ip-address: true时 ，client使用的是ip向服务中心注册 ，但是默认获取的ip是 127.0.0.1。默认情况下当这个获取的ip 和 hostName 不同时 ，则产生不可用分片提示信息(unavailable-replicas)，并且集群间的数据不会同步
+
+将该项设置为false后即可
+
+![](https://user-images.githubusercontent.com/2216435/148350024-0d4f9de1-e1ff-4d9d-ac02-c9c7b5853dde.png)
+
