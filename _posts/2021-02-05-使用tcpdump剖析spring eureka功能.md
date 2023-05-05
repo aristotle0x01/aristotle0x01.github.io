@@ -292,7 +292,17 @@ tcpdump -tttt -s0 -X -vv tcp port 8501 -w captcha.cap
 
 2）服务关停时向注册中心主动发送状态更新消息是一种方式(受spring cloud版本影响)，靠注册中心的心跳探活机制是另外一种机制
 
-### 8.2 unavailable-replicas现象
+### 8.2 关键参数意义
+
+**eureka.instance.appname**必须一致，否则会出现下面的情况(*<u>8.3</u>*)。也就是说，页面上"Application"列使用该参数
+
+![](https://user-images.githubusercontent.com/2216435/236419426-848ed167-4057-4d1d-8975-81160402e038.png)
+
+**spring.application.name**可以不一致，但作为同一服务的不同实例，建议统一
+
+![](https://user-images.githubusercontent.com/2216435/236419484-90acfda5-c556-45bd-9f2f-486ab0e3b825.png)
+
+### 8.3 unavailable-replicas现象
 
 ![](https://user-images.githubusercontent.com/2216435/148346887-95a81e04-ea09-4b93-b2fd-df8f3ab14b6e.png)
 
@@ -345,6 +355,7 @@ eureka.instance.hostname不能相同
 
 ```
 SPRING_OPTS="
+ --eureka.environment=prod
  --spring.application.name=eureka-cluster 
  --eureka.instance.appname=eureka-cluster 
  --eureka.instance.preferIpAddress=true 
@@ -353,6 +364,7 @@ SPRING_OPTS="
  --eureka.instance.ip-address=ip1"
  
  SPRING_OPTS="
+ --eureka.environment=prod
  --spring.application.name=eureka-cluster 
  --eureka.instance.appname=eureka-cluster 
  --eureka.instance.preferIpAddress=true 
