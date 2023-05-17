@@ -38,9 +38,7 @@ eureka:
     fetchRegistry: true
 
 docker run -d --name peer1 -e SPRING_OPTS="--eureka.environment=prod --eureka.instance.appname=server-eureka --spring.application.name=server-eureka --eureka.instance.hostname=10.185.55.81 --eureka.instance.preferIpAddress=true --eureka.instance.ip-address=10.185.55.81 --eureka.client.serviceUrl.defaultZone=http://10.185.55.82:8501/eureka/,http://10.185.55.83:8501/eureka/"
-
 docker run -d --name peer2 -e SPRING_OPTS="--eureka.environment=prod --eureka.instance.appname=server-eureka --spring.application.name=server-eureka --eureka.instance.hostname=10.185.55.82 --eureka.instance.preferIpAddress=true --eureka.instance.ip-address=10.185.55.82 --eureka.client.serviceUrl.defaultZone=http://10.185.55.81:8501/eureka/,http://10.185.55.83:8501/eureka/"
-
 docker run -d --name peer3 -e SPRING_OPTS="--eureka.environment=prod --eureka.instance.appname=server-eureka --spring.application.name=server-eureka --eureka.instance.hostname=10.185.55.83 --eureka.instance.preferIpAddress=true --eureka.instance.ip-address=10.185.55.83 --eureka.client.serviceUrl.defaultZone=http://10.185.55.81:8501/eureka/,http://10.185.55.82:8501/eureka/"
 ```
 
