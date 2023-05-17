@@ -4,8 +4,6 @@ title:  "eureka集群参数配置与基于tcpdump的行为观测"
 date:   2021-02-05
 categories: eureka 注册中心 spring-cloud tcpdump
 ---
-# eureka集群参数配置与基于tcpdump的行为观测
-
 ## 1.背景
 
 ​        Eureka作为SpringCloud全家桶中的注册中心，一旦挂了，依赖它的微服务就无法找到彼此而不可用，可谓关键组件。因此有必要探究一下它的基本原理和配置，不至于救火的时候两眼一抹黑。
