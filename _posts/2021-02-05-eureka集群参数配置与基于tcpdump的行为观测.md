@@ -167,9 +167,11 @@ tcpdump -tttt -s0 -X -vv tcp port 8501 -w captcha.cap
 // 文件所在端执行
 python -m SimpleHTTPServer 12345
 
-
 // 下载端浏览器访问即可
 ip:12345
+
+// wget
+wget ip:12345/file_to_download
 ```
 
 #### 4.1 特定实例信息(meta data)
@@ -220,15 +222,39 @@ curl http://10.182.50.79:8501/eureka/apps/BOP-ZUUL-GATEWAY
 
 ### 4.2 实例注册行为
 
-![image](https://user-images.githubusercontent.com/2216435/115951097-758af480-a511-11eb-8524-7a2e45d9dec9.png)
+post /eureka/apps/BOP-FMS-QUERY-INFO
 
-### 4.3 注册中心节点间更新
+![](https://user-images.githubusercontent.com/2216435/238827185-0cc6180f-f27d-4ab7-bea5-5a937b40e2a2.png)
 
-![image](https://user-images.githubusercontent.com/2216435/115951537-d74c5e00-a513-11eb-932e-93441f0038af.png)
+![](https://user-images.githubusercontent.com/2216435/238827383-804acbcd-9b41-4f86-879e-132ab56fcc93.png)
 
-### 4.4 重启特定注册中心节点
+### 4.3 实例心跳
 
-​        重启**10.182.50.79**所在eureka节点，第79帧即位其向另一个注册中心节点注册。此后，第86帧为另一节点向重启节点增量同步注册信息。
+PUT /eureka/apps/BOP-FMS-QUERY-INFO/donkey.bop.weibo.com:bop-fms-query-info:8857
+
+![](https://user-images.githubusercontent.com/2216435/238827822-3fb02702-eb15-4b06-a468-f43ce2279a2f.png)
+
+![](https://user-images.githubusercontent.com/2216435/238828100-8b372ac8-cc4c-4a58-b709-ece1801fd502.png)
+
+### 4.4 实例下线行为
+
+将BOP-FMS-QUERY-INFO实例停止：
+
+![](https://user-images.githubusercontent.com/2216435/238821398-5c806726-a1ea-4cfd-8d87-44ebd7d0cf2b.png)
+
+![](https://user-images.githubusercontent.com/2216435/238821679-9da27065-e1d1-40b8-a37f-40d234bd4cb5.png)
+
+### 4.5 注册中心节点间更新
+
+10.185.55.87 => 10.182.50.80，可见节点间同步数据采用的是主动**push**行为
+
+![](https://user-images.githubusercontent.com/2216435/238814015-33d4488c-b666-4097-86fb-dcc549f517ee.png)
+
+<img src="https://user-images.githubusercontent.com/2216435/238814624-3d303c82-2455-4c9b-b690-785e18169f98.png" style="float: left;zoom:60%;" />
+
+### 4.6 重启特定注册中心节点
+
+重启**10.182.50.79**所在eureka节点，第79帧即位其向另一个注册中心节点注册。此后，第86帧为另一节点向重启节点增量同步注册信息。
 
 ![](https://user-images.githubusercontent.com/2216435/238640551-39ca8341-efb8-4440-a0ca-51b817677633.png)
 
@@ -252,9 +278,7 @@ curl http://10.182.50.79:8501/eureka/apps/BOP-ZUUL-GATEWAY
 
 **解决及结论**
 
-最终重启了eureka注册中心，让其走出self-preservation模式，主动靠心跳检测下线已关停服务
-
-两个结论:
+最终重启了eureka注册中心，让其走出self-preservation模式，主动靠心跳检测下线已关停服务。两个结论:
 
 a. 重启注册中心会担心注册信息丢失和恢复速度，看到有文章说服务只是在启动的时候才会注册，那就需要重启所有服务造成较大影响，其实不然，每次心跳即可作为注册信息，此次得到验证
 
