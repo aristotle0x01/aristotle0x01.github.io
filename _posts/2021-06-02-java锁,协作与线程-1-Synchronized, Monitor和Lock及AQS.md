@@ -5,6 +5,7 @@ date:   2021-06-02
 categories: java synchronization lock cooperation 同步 协作 AQS condition monitor
 ---
 
+[toc]
 
 ## 1.概述
 
@@ -246,7 +247,7 @@ java使用的是mesa语义，也就是说仅将激活线程放入ready 队列，
 
 
 
-## References
+## 6.References
 
 [^1]: [What Is a Monitor in Computer Science?](https://www.baeldung.com/cs/monitor)
 [^2]: [Better monitors for Java：A Hoare-style monitor package for multithreaded programming in Java](https://www.infoworld.com/article/2077769/better-monitors-for-java.html)
@@ -254,3 +255,4 @@ java使用的是mesa语义，也就是说仅将激活线程放入ready 队列，
 [^4]: [Thread Synchronization: Chapter 20 of Inside the Java Virtual Machine by Bill Venners](https://www.artima.com/insidejvm/ed2/threadsynch.html)
 [^5]:[In Java, what is the difference between a monitor and a lock](https://stackoverflow.com/questions/49610644/in-java-what-is-the-difference-between-a-monitor-and-a-lock)
 [^6]: [Lecture 6: Semaphores and Monitors](https://cseweb.ucsd.edu/classes/fa05/cse120/lectures/120-l6.pdf)
+
