@@ -52,9 +52,19 @@ ref: [^1] [^2]
 
 上述三种锁是jdk1.6为了提升synchronized性能，针对不同场景进行的三种内部优化，这三种实现会修改**markword:tag**字段。通过jol包打印header取值情况：
 
-| public static void main(String[] args) {<br/>        Object o = new Object();<br/>        log.info("未进入同步块，MarkWord 为：");<br/>        log.info(ClassLayout.parseInstance(o).toPrintable());<br/>        synchronized (o){<br/>            log.info(("进入同步块，MarkWord 为："));<br/>            log.info(ClassLayout.parseInstance(o).toPrintable());<br/>        }<br/>    } |
-| ------------------------------------------------------------ |
-| <img src="https://user-images.githubusercontent.com/2216435/280236517-1b7b9547-66bf-4623-bc7e-e16cb9a1f087.png" alt="object header output when synchronized" style="zoom:35%; float: left;" /> |
+```
+		Thread.sleep(5000);
+    Object o = new Object();
+    System.out.println("未进入同步块，MarkWord 为：");
+    System.out.println(ClassLayout.parseInstance(o).toPrintable());
+    synchronized (o){
+    		System.out.println(("进入同步块，MarkWord 为："));
+    		System.out.println(ClassLayout.parseInstance(o).toPrintable());
+    }
+```
+
+| <img src="https://user-images.githubusercontent.com/2216435/280236517-1b7b9547-66bf-4623-bc7e-e16cb9a1f087.png" alt="object header output when synchronized" style="zoom:35%; float: left;" /> | object header同步前后变化 |
+| ------------------------------------------------------------ | ------------------------- |
 
 至于上述三种内部锁适用于何种场景及其流转，不是本文重点，详见[难搞的偏向锁终于被 Java 移除了](https://segmentfault.com/a/1190000041194920)
 
@@ -100,8 +110,8 @@ ref: [^1] [^2]
 
 ### 3.5 synchronized锁模型示意
 
-| <img src="https://user-images.githubusercontent.com/2216435/280472712-11a7744c-2011-418f-b697-4da7176865d9.png" alt="synchronized locking model" style="zoom:90%; float: left;" /> |
-| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/280504547-9f3ed02a-c788-419b-99af-9b540503179c.png" alt="synchronized locking model" style="zoom:60%; float: left;" /> | synchronized实现逻辑模型 |
+| ------------------------------------------------------------ | ------------------------ |
 
 <br/>
 
@@ -129,8 +139,8 @@ try {
 }
 ```
 
-| <img src="https://user-images.githubusercontent.com/2216435/280270571-3619fec8-c0ff-425a-8935-c593128767b7.png" alt="lock object header" style="zoom:35%; float: left;" /> |
-| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/280270571-3619fec8-c0ff-425a-8935-c593128767b7.png" alt="lock object header" style="zoom:35%; float: left;" /> | 加锁前后object header无变化 |
+| ------------------------------------------------------------ | --------------------------- |
 
 <br/>
 
