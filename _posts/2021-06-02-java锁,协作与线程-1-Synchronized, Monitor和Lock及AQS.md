@@ -23,12 +23,15 @@ categories: java synchronization lock cooperation 同步 协作 AQS condition mo
 
 ### 2.1 java对象头
 
-任意java对象都包含对象头，以保存相关描述信息：
+任意java对象都包含对象头，以保存相关描述信息
 
-| <img src="https://user-images.githubusercontent.com/2216435/280229841-719fc7c0-c06d-47fe-95e9-a9267f1ae964.png" alt="header" style="zoom:50%; float: left;" /> | <img src="https://user-images.githubusercontent.com/2216435/280229977-ef3fa1da-8f5a-4756-98e2-ad998b4f1932.png" alt="mark word" style="zoom:50%; float: left;" /> |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 对象头                                                       | Mark word                                                    |
+| :----------------------------------------------------------- | ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/280229841-719fc7c0-c06d-47fe-95e9-a9267f1ae964.png" alt="header" style="zoom:50%; float: left;" /> | <img src="https://user-images.githubusercontent.com/2216435/280229977-ef3fa1da-8f5a-4756-98e2-ad998b4f1932.png" alt="mark word" style="zoom:40%; float: left;" /> |
 
 <br/>
+
+
 
 ### 2.2 monitor
 
@@ -61,7 +64,8 @@ public static void main(String[] args) {
     }
 ```
 
-<img src="https://user-images.githubusercontent.com/2216435/280236517-1b7b9547-66bf-4623-bc7e-e16cb9a1f087.png" alt="object header output when synchronized" style="zoom:40%; float: left;" />
+| <img src="https://user-images.githubusercontent.com/2216435/280236517-1b7b9547-66bf-4623-bc7e-e16cb9a1f087.png" alt="object header output when synchronized" style="zoom:40%; float: left;" /> |
+| ------------------------------------------------------------ |
 
 至于上述三种内部锁适用于何种场景及其流转，不是本文重点，详见[难搞的偏向锁终于被 Java 移除了](https://segmentfault.com/a/1190000041194920)
 
@@ -73,11 +77,9 @@ public static void main(String[] args) {
 
 上述代码编译后字节码：
 
-<img src="https://user-images.githubusercontent.com/2216435/280238904-5da1ca66-2e8c-4522-ba12-4e7556a189b2.png" alt="bytecode" style="zoom:50%; float: left;" />
-
-可见**`synchronized`**在编译后，在jvm内部由指令**`monitorenter/monitorexit`**实现，下面看看the java virtual machine specification 8中的定义：
-
-<img src="https://user-images.githubusercontent.com/2216435/280265501-d5c43ee8-625d-4926-8d8d-c23579b48aba.png" alt="monitorenter" style="zoom:40%; float: left;" />
+| **`synchronized`**在编译后，在jvm内部由指令**`monitorenter/monitorexit`**实现 | <img src="https://user-images.githubusercontent.com/2216435/280238904-5da1ca66-2e8c-4522-ba12-4e7556a189b2.png" alt="bytecode" style="zoom:60%; float: left;" /> |
+| :----------------------------------------------------------- | ------------------------------------------------------------ |
+| the java virtual machine specification 8中的定义             | <img src="https://user-images.githubusercontent.com/2216435/280265501-d5c43ee8-625d-4926-8d8d-c23579b48aba.png" alt="monitorenter" style="zoom:30%; float: left;" /> |
 
 根据描述，当锁对象关联的monitor的entry count：
 
