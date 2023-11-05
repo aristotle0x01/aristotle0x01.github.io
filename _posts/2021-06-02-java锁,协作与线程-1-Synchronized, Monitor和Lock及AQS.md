@@ -15,7 +15,7 @@ categories: java synchronization lock cooperation 同步 协作 AQS condition mo
 - 偏向/轻量/重量锁等概念是jdk1.6针对**`synchronized`**的性能优化，与其它锁机制无关，对其它锁而言，对象头不会变化
 - **`synchronized`**通过Object的wait/notify方法提供隐性条件协作
 
-
+<br/>
 
 
 
@@ -28,7 +28,7 @@ categories: java synchronization lock cooperation 同步 协作 AQS condition mo
 | <img src="https://user-images.githubusercontent.com/2216435/280229841-719fc7c0-c06d-47fe-95e9-a9267f1ae964.png" alt="header" style="zoom:50%; float: left;" /> | <img src="https://user-images.githubusercontent.com/2216435/280229977-ef3fa1da-8f5a-4756-98e2-ad998b4f1932.png" alt="mark word" style="zoom:50%; float: left;" /> |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-
+<br/>
 
 ### 2.2 monitor
 
@@ -39,7 +39,7 @@ monitor是由C.A.R. Hoare等人提出的一种线程同步机制，提供：
 
 ref: [^1] [^2]
 
-
+<br/>
 
 
 
@@ -65,7 +65,7 @@ public static void main(String[] args) {
 
 至于上述三种内部锁适用于何种场景及其流转，不是本文重点，详见[难搞的偏向锁终于被 Java 移除了](https://segmentfault.com/a/1190000041194920)
 
-
+<br/>
 
 
 
@@ -85,7 +85,7 @@ public static void main(String[] args) {
 - 不为**0**当已经持有时，则增1，重入持有
 - 不为**0**且被其它线程持有，则阻塞
 
-
+<br/>
 
 
 
@@ -93,9 +93,9 @@ public static void main(String[] args) {
 
 根据[Monitors and Exceptions : How to Implement Java efficiently: Andreas Krall and Mark Probst](https://people.cs.vt.edu/~ryder/oosem99/talks/isaila-krall.pdf)
 
- sun的实现是使用锁对象的object identifier在hashmap中关联monitor对象(首次加锁时生成)。当然，实际上各个版本的jvm到底如何实现，还需要具体研究jvm源码，本文暂时止步于此。有个monitor参考实现[^3]
+ sun的实现是使用锁对象的object identifier在hashmap中关联monitor对象(首次加锁时生成)。当然，实际上各个版本的jvm到底如何实现，还需要具体研究jvm源码，本文暂时止步于此[^4][^5]。有个monitor参考实现[^3]
 
-
+<br/>
 
 
 
@@ -103,13 +103,15 @@ public static void main(String[] args) {
 
 通过Object对象中的**`wait()/notify()`**方法，二者包含且仅包含了一个隐性Condition变量。
 
-
+<br/>
 
 
 
 ### 3.5 synchronized锁模型示意
 
 <img src="https://user-images.githubusercontent.com/2216435/280472712-11a7744c-2011-418f-b697-4da7176865d9.png" alt="synchronized locking model" style="zoom:90%; float: left;" />
+
+<br/>
 
 
 
@@ -137,7 +139,7 @@ try {
 
 <img src="https://user-images.githubusercontent.com/2216435/280270571-3619fec8-c0ff-425a-8935-c593128767b7.png" alt="lock object header" style="zoom:35%; float: left;" />
 
-
+<br/>
 
 
 
@@ -145,7 +147,7 @@ try {
 
 **AQS**是java中几乎所有锁的基类，内置了CAS，等待队列，park/unpark，Condition等核心功能。
 
-
+<br/>
 
 
 
@@ -222,7 +224,7 @@ public final void await() throws InterruptedException {
         enq(node)
 ```
 
-
+<br/>
 
 
 
@@ -234,7 +236,7 @@ public final void await() throws InterruptedException {
 
 java使用的是mesa语义，也就是说仅将激活线程放入ready 队列，并不一定会立即得到操作系统调度机会
 
-
+<br/>
 
 
 
