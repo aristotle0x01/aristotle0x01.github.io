@@ -7,6 +7,20 @@ categories: java synchronization lock cooperation 同步 协作 AQS condition mo
 
 [toc]
 
+## 0.带着问题出发
+
+1. 所谓对象与monitor关联，是什么意思？
+
+2. synchronized是如何实现的？
+
+3. object的wait()/notify()方法有什么用，AQS实现是否用到了这些函数？
+
+4. synchronized对象时，对象头会有变化，ReentrantLock加锁后，对象头本身变化吗？
+
+   
+
+
+
 ## 1.概述
 
 本文意在探讨java两大类同步机制**`synchronized`**与锁(如**`ReentrantLock`**)的异同，及其背后各自的实现原理。首先给出一些结论，后续验证和分析：
@@ -154,6 +168,12 @@ try {
 
 **AQS**是java中几乎所有锁的基类，内置了CAS，等待队列，park/unpark，Condition等核心功能。
 
+* 在不需或者不考虑等待时，直接利用**CAS**操作抢占锁，是为轻量级
+* FIFO队列，唤醒时优先从队列头部开始(不论锁是否公平)，也避免了操作系统唤醒的不确定和无序性
+* 所谓公平：有人排队则先加入队尾排队，是为公平；先抢，失败再入队尾排队，是为非公平
+* 利用**park/unpark**方法进入休眠和唤醒
+* 理论上无限多条件等待变量和队列
+
 <br/>
 
 
@@ -162,10 +182,9 @@ try {
 
 锁通过生成新的Condition，原则上可以有无限多个等待队列。等待队列只能通过await()方法进入，通过signal()方法退出。
 
-| <img src="https://user-images.githubusercontent.com/2216435/120757977-da3f6300-c543-11eb-9a25-1f80e7a48e92.png" alt="thread state" style="zoom:40%; float: left;" /> | case1: 释放锁等待           |
-| ------------------------------------------------------------ | --------------------------- |
-| <img src="https://user-images.githubusercontent.com/2216435/120756871-63559a80-c542-11eb-9ef8-148097cfbaae.png" alt="thread state" style="zoom:40%; float: left;" /> | case2a: 通知其它线程/释放锁 |
-| <img src="https://user-images.githubusercontent.com/2216435/120756901-6ea8c600-c542-11eb-8d73-841034873e33.png" alt="thread state" style="zoom:40%; float: left;" /> | case2b: 其它线程抢锁成功    |
+| <img src="https://user-images.githubusercontent.com/2216435/280525575-d52d469b-e171-48d0-8c3a-82a6c1c85c9d.png" alt="thread state" style="zoom:40%; float: left;" /> | case1: await()      |
+| ------------------------------------------------------------ | ------------------- |
+| <img src="https://user-images.githubusercontent.com/2216435/280526131-688a9f1e-0492-49a6-a347-37ff56f0c085.png" alt="thread state" style="zoom:40%; float: left;" /> | **case2: signal()** |
 
 从代码角度分析，首先看进入等待队列
 
