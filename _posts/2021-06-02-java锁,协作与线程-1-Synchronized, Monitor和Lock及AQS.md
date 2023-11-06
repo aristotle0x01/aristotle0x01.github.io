@@ -184,7 +184,7 @@ try {
 
 | <img src="https://user-images.githubusercontent.com/2216435/280525575-d52d469b-e171-48d0-8c3a-82a6c1c85c9d.png" alt="thread state" style="zoom:40%; float: left;" /> | case1: await()      |
 | ------------------------------------------------------------ | ------------------- |
-| <img src="https://user-images.githubusercontent.com/2216435/280526131-688a9f1e-0492-49a6-a347-37ff56f0c085.png" alt="thread state" style="zoom:40%; float: left;" /> | **case2: signal()** |
+| <img src="https://user-images.githubusercontent.com/2216435/280577791-42604a3b-7bb1-4ffa-acb8-c595357fe948.png" alt="thread state" style="zoom:40%; float: left;" /> | **case2: signal()** |
 
 从代码角度分析，首先看进入等待队列
 
