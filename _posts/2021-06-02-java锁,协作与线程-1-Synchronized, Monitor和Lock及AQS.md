@@ -10,14 +10,11 @@ categories: java synchronization lock cooperation 同步 协作 AQS condition mo
 ## 0.带着问题出发
 
 1. 所谓对象与monitor关联，是什么意思？
-
 2. synchronized是如何实现的？
-
 3. object的wait()/notify()方法有什么用，AQS实现是否用到了这些函数？
-
 4. synchronized对象时，对象头会有变化，ReentrantLock加锁后，对象头本身变化吗？
 
-   
+<br/>
 
 
 
