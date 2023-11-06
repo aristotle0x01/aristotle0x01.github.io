@@ -16,7 +16,7 @@ categories: java thread hotspot jvm
 
 <br/>
 
-## 2.hotspot 线程模型
+## 2.hotspot 线程模型[^1]
 
 对于hotspot虚拟机，java线程(java.lang.Thread)跟底层操作系统线程是**1:1**映射的，java线程由操作系统进行调度。
 
@@ -36,7 +36,7 @@ NPTL (Native POSIX Threads Library) is the GNU C library POSIX threads implement
 
 
 
-## 3.java,jvm和操作系统线程关系
+## 3.java,jvm和操作系统线程关系[^2]
 
 ![](https://user-images.githubusercontent.com/2216435/121341870-aa34fd00-c953-11eb-8642-06120633e755.png)
 
@@ -175,11 +175,11 @@ class JavaThread: public Thread {
 
   stop主要问题是有可能造成数据不一致情况，所以已经不建议使用
 
-- **interrupt**
+- **interrupt**[^3] [^5]
 
 - ThreadLocal
 
-上述API中，主要讨论一下interrupt实现，其它可管窥。
+上述API中，主要讨论一下interrupt实现[^6]，其它可管窥。
 
 ### 5.1 interrupt
 
@@ -260,15 +260,16 @@ void os::interrupt(Thread* thread) {
 * 设置中断标记
 * 唤醒休眠和同步等待
 
-更详尽解释可参考[interrupt在jvm内部详解][4]，至于**unpark**干了什么，可参考本系列第三篇文章。
+更详尽解释可参考[^4]，至于**unpark**干了什么，可参考本系列第三篇文章。
 
 <br/>
 
 ## 6.参考
 
-[1]: https://openjdk.java.net/groups/hotspot/docs/RuntimeOverview.html "HotSpot Runtime Overview: Thread Management"
-[2]: https://stackoverflow.com/questions/1888160/distinguishing-between-java-threads-and-os-threads "Distinguishing between Java threads and OS threads?"
-[3]:  https://stackoverflow.com/questions/3590000/what-does-java-lang-thread-interrupt-do  "What does java.lang.Thread.interrupt() do?"
-[4]: https://programmerall.com/article/24842128375/ "JNi - Analysis of System Level Thread Interruption Principles from JVM Source Codes"
-[5]: https://www.dre.vanderbilt.edu/~schmidt/cs891s/2020-PDFs/13.4.5-thread-lifecycle-pt5-java-interrupts-vs-hardware-os-interrupts.pdf "Managing the Java Thread Lifecycle: Java Thread Interrupts vs. Hardware/OS Interrupts"
-[6]: https://carlmastrangelo.com/blog/javas-mysterious-interrupt "Java’s Mysterious Interrupt"
+[^1]: [hotSpot Runtime Overview: Thread Management](https://openjdk.java.net/groups/hotspot/docs/RuntimeOverview.html)
+[^2]: [Distinguishing between Java threads and OS threads?](https://stackoverflow.com/questions/1888160/distinguishing-between-java-threads-and-os-threads)
+[^3]:  [What does java.lang.Thread.interrupt() do?](https://stackoverflow.com/questions/3590000/what-does-java-lang-thread-interrupt-do)
+[^4]: [JNi - Analysis of System Level Thread Interruption Principles from JVM Source Codes](https://programmerall.com/article/24842128375/)
+[^5]: [Managing the Java Thread Lifecycle: Java Thread Interrupts vs. Hardware/OS Interrupts](https://www.dre.vanderbilt.edu/~schmidt/cs891s/2020-PDFs/13.4.5-thread-lifecycle-pt5-java-interrupts-vs-hardware-os-interrupts.pdf)
+[^6]: [Java’s Mysterious Interrupt](https://carlmastrangelo.com/blog/javas-mysterious-interrupt)
+
