@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "java锁,协作与线程-2-java之thread模型"
+title:  "java锁与线程-2-java之thread模型"
 date:   2021-06-09
 categories: java thread hotspot jvm
 ---
