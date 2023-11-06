@@ -12,6 +12,8 @@ AQS是jdk中锁实现的基类，而其底层实现依赖于LockSuport的park()/
 
 <img alt="dictionary" src="https://user-images.githubusercontent.com/2216435/121449922-5404a000-c9cd-11eb-96b8-7d91b595177a.png" style="zoom:40%; float: left;">
 
+<br/>
+
 我觉得3.b语意解释比较符合park在锁实现中起的作用，即在某个地方停留一段时间
 
 <br/>
@@ -265,6 +267,8 @@ void Parker::unpark() {
 
 <br/>
 
+<br/>
+
 ## 4.pthread_cond_wait？
 
 ### 4.1 继续追踪
@@ -309,7 +313,17 @@ int main() {
 
 追踪：`strace -e futex ./a.out`
 
-<img src="https://user-images.githubusercontent.com/2216435/121489839-0e64c900-ca07-11eb-804f-cc4d276cc79b.png" alt="header" style="zoom:70%; float: left;" />
+<img src="https://user-images.githubusercontent.com/2216435/121489839-0e64c900-ca07-11eb-804f-cc4d276cc79b.png" alt="header" style="zoom:70%; float: left;" /><br/>
+
+
+
+
+
+
+
+
+
+
 
 本节参考[^4]
 
@@ -327,7 +341,25 @@ futex方法里重要的是**FUTEX_WAIT** 和 **FUTEX_WAKE**，基本对应了wai
 
 何谓fast，大多数情况下，锁是没有竞争的，通过用户态原子操作即可完成，轻量级；少数需要等待情况下，才进入内核态，是谓重量级操作[^5] [^6] [^7]
 
-<img src="https://user-images.githubusercontent.com/2216435/122011603-dab2e600-cdee-11eb-9bb9-1636a2eb247e.png" alt="header" style="zoom:45%; float: left;" />
+<img src="https://user-images.githubusercontent.com/2216435/122011603-dab2e600-cdee-11eb-9bb9-1636a2eb247e.png" alt="header" style="zoom:45%; float: left;" /><br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <br/>
 
