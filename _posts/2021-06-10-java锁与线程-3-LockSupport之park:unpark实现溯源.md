@@ -10,8 +10,8 @@ AQS是jdk中锁实现的基类，而其底层实现依赖于LockSuport的park()/
 
 好奇park英文原意，下面是韦氏大词典的部分解释：
 
-| <img src="https://user-images.githubusercontent.com/2216435/121449922-5404a000-c9cd-11eb-96b8-7d91b595177a.png" alt="header" style="zoom:45%; float: left;" /> |
-| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/121449922-5404a000-c9cd-11eb-96b8-7d91b595177a.png" alt="header" style="zoom:45%; float: left;" /> |      |
+| ------------------------------------------------------------ | ---- |
 
 我觉得3.b语意解释比较符合park在锁实现中起的作用，即在某个地方停留一段时间
 
@@ -113,8 +113,8 @@ UNSAFE_END
 
 Java.lang.Thread是jdk应用层面的线程，JavaThread为hotspot中的线程，一一对应，关系如下
 
-| <img src="https://user-images.githubusercontent.com/2216435/121341870-aa34fd00-c953-11eb-8642-06120633e755.png" alt="header" style="zoom:40%; float: left;" /> |
-| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/121341870-aa34fd00-c953-11eb-8642-06120633e755.png" alt="header" style="zoom:40%; float: left;" /> |      |
+| ------------------------------------------------------------ | ---- |
 
 [jdk8u/hotspot/src/share/vm/runtime/thread.hpp->JavaThread](https://github.com/openjdk/jdk8u/blob/master/hotspot/src/share/vm/runtime/thread.hpp)
 
@@ -263,8 +263,8 @@ void Parker::unpark() {
 
 上面介绍的几个底层实现类，其关系如下
 
-| <img src="https://user-images.githubusercontent.com/2216435/121477019-e6229d80-c9f9-11eb-981e-2f4a65db31e9.png" alt="header" style="zoom:40%; float: left;" /> |
-| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/121477019-e6229d80-c9f9-11eb-981e-2f4a65db31e9.png" alt="header" style="zoom:40%; float: left;" /> |      |
+| ------------------------------------------------------------ | ---- |
 
 <br/>
 
@@ -312,8 +312,8 @@ int main() {
 
 追踪：`strace -e futex ./a.out`
 
-| <img src="https://user-images.githubusercontent.com/2216435/121489839-0e64c900-ca07-11eb-804f-cc4d276cc79b.png" alt="header" style="zoom:70%; float: left;" /> |
-| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/121489839-0e64c900-ca07-11eb-804f-cc4d276cc79b.png" alt="header" style="zoom:70%; float: left;" /> |      |
+| ------------------------------------------------------------ | ---- |
 
 本节参考[^4]
 
@@ -331,8 +331,8 @@ futex方法里重要的是**FUTEX_WAIT** 和 **FUTEX_WAKE**，基本对应了wai
 
 何谓fast，大多数情况下，锁是没有竞争的，通过用户态原子操作即可完成，轻量级；少数需要等待情况下，才进入内核态，是谓重量级操作[^5] [^6] [^7]
 
-| <img src="https://user-images.githubusercontent.com/2216435/122011603-dab2e600-cdee-11eb-9bb9-1636a2eb247e.png" alt="header" style="zoom:45%; float: left;" /> |
-| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/122011603-dab2e600-cdee-11eb-9bb9-1636a2eb247e.png" alt="header" style="zoom:45%; float: left;" /> |      |
+| ------------------------------------------------------------ | ---- |
 
 <br/>
 
