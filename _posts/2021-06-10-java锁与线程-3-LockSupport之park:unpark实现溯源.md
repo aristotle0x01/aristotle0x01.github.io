@@ -10,8 +10,8 @@ AQS是jdk中锁实现的基类，而其底层实现依赖于LockSuport的park()/
 
 好奇park英文原意，下面是韦氏大词典的部分解释：
 
-| <img src="https://user-images.githubusercontent.com/2216435/121449922-5404a000-c9cd-11eb-96b8-7d91b595177a.png" alt="header" style="zoom:45%; float: left;" /> |      |
-| ------------------------------------------------------------ | ---- |
+| <picture><br/>  <img alt="dictionary" src="https://user-images.githubusercontent.com/2216435/121449922-5404a000-c9cd-11eb-96b8-7d91b595177a.png" style="zoom:45%; float: left;"><br/></picture> |
+| ------------------------------------------------------------ |
 
 我觉得3.b语意解释比较符合park在锁实现中起的作用，即在某个地方停留一段时间
 
