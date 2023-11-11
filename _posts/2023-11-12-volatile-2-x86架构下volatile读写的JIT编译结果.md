@@ -150,7 +150,7 @@ inline void OrderAccess::fence() {
 [^1]: [Memory Barriers Are Like Source Control Operations](https://preshing.com/20120710/memory-barriers-are-like-source-control-operations/)
 [^2]: [内存屏障及其在 JVM 内的应用（下）](https://segmentfault.com/a/1190000022508589)
 [^3]: [jdk MemoryBarriers](https://github.com/openjdk/jdk/blob/6bab0f539fba8fb441697846347597b4a0ade428/src/jdk.internal.vm.ci/share/classes/jdk.vm.ci.code/src/jdk/vm/ci/code/MemoryBarriers.java)
-[^4]:[全网最硬核 Java 新内存模型解析与实验 - 5. JVM 底层内存屏障源码分析](https://juejin.cn/user/501033033545053/posts)
+[^4]:[全网最硬核 Java 新内存模型解析与实验 - 5. JVM 底层内存屏障源码分析](https://juejin.cn/post/7080890011217821710)
 [^5]: [What does __asm__ __volatile__ do in C?](https://stackoverflow.com/questions/26456510/what-does-asm-volatile-do-in-c)
 [^6]: [Intel® 64 Architecture Memory Ordering White Paper ](https://www.cs.cmu.edu/~410-f10/doc/Intel_Reordering_318147.pdf)
 
