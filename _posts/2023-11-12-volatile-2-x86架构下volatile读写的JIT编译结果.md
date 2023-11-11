@@ -141,7 +141,7 @@ inline void OrderAccess::fence() {
 - **SFENCE**—指令将程序指令流中在其之前发生的所有存储（写入）操作进行序列化，但不影响加载（读取）操作
 - **LFENCE**—指令将程序指令流中在其之前发生的所有加载（读取）操作进行序列化，但不影响存储（写入）操作
 - **MFENCE**—指令将程序指令流中在其之前发生的所有存储（写入）和加载（读取）操作进行序列化
-- **LOCK**—在多处理器环境中，LOCK指令防止读写重排，并独占共享内存且完成原子化操作。<u>**Locked instructions have a total order**</u> [^6]。一般而言lock性能较高，会替代**MFENCE**使用。
+- **LOCK**—在多处理器环境中，LOCK指令防止读写重排，并独占共享内存且完成原子化操作。<u>Locked instructions have a total order</u> [^6]。一般而言lock性能较高，会替代**MFENCE**使用。
 
 <br/>
 
