@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "volatile-2-x86架构下volatile读写的JIT编译结果"
-date:   2023-11-11
-categories: jitwatch volatile JIT instruction memory barrier
+title:  "volatile-2-volatile在jvm内部的实现"
+date:   2023-11-12
+categories: jitwatch volatile JIT instruction memory barrier x86
 ---
 
 
@@ -62,7 +62,7 @@ categories: jitwatch volatile JIT instruction memory barrier
 
 <br/>
 
-## 3. jvm中的实现
+## 3. 内存屏障的实现
 
 ### 3.1 屏障定义[^4]
 
@@ -121,11 +121,11 @@ inline void OrderAccess::fence() {
 
 | 各平台cache可见性标准                                        |
 | ------------------------------------------------------------ |
-| <img src="https://user-images.githubusercontent.com/2216435/282245622-80529551-b94f-4143-b771-919c80dbf9eb.png" alt="cache coherence of platforms" style="zoom:45%; float: left;" /> |
+| <img src="https://user-images.githubusercontent.com/2216435/282245622-80529551-b94f-4143-b771-919c80dbf9eb.png" alt="cache coherence of platforms" style="zoom:40%; float: left;" /> |
 
 <br/>
 
-## 4.`__asm__ volatile`含义[^5]
+### 3.3 `__asm__ volatile`含义[^5]
 
 * `__asm__`表示在c语言中嵌入汇编代码
 * `__asm__ volatile`表示不允许优化器删除，cache，乱序等
@@ -134,7 +134,7 @@ inline void OrderAccess::fence() {
 
 <br/>
 
-## 5.x86屏障指令
+### 3.4 x86屏障指令
 
 根据**IA32-3 7.2 memory odering**小节:
 
@@ -145,7 +145,103 @@ inline void OrderAccess::fence() {
 
 <br/>
 
-## 6.references
+## 4.volatile变量读写实现[^7]
+
+### 4.1 字节码实现
+
+`getfield & putfield`
+
+| volatile变量读写的字节码编译                                 |
+| ------------------------------------------------------------ |
+| <img src="https://user-images.githubusercontent.com/2216435/282274605-667a6613-78a2-4994-bead-16cf445f3328.png" alt="cache coherence of platforms" style="zoom:60%; float: left;" /> |
+
+<br/>
+
+### 4.2 jvm实现(x86)
+
+**1）定义**： *jdk8u/hotspot/src/cpu/x86/vm/templateTable_x86_32.cpp*
+
+```
+void TemplateTable::getfield(int byte_no) {
+  getfield_or_static(byte_no, false);
+}
+
+void TemplateTable::putfield(int byte_no) {
+  putfield_or_static(byte_no, false);
+}
+```
+
+**2）具体实现**
+
+```
+void TemplateTable::getfield_or_static(int byte_no, bool is_static) {
+  // 删除大量非直接相关代码
+	...
+
+  __ bind(Done);
+  // Doug Lea believes this is not needed with current Sparcs (TSO) and Intel (PSO).
+  // volatile_barrier( );
+}
+
+void TemplateTable::putfield_or_static(int byte_no, bool is_static) {
+	// 删除大量非直接相关代码
+	...
+	
+  // Check for volatile store
+  __ testl(rdx, rdx);
+  __ jcc(Assembler::zero, notVolatile);
+  volatile_barrier(Assembler::Membar_mask_bits(Assembler::StoreLoad |
+                                               Assembler::StoreStore));
+  __ bind(notVolatile);
+}
+
+```
+
+对于volatile的读，在x86上是不需要的，也跟**OrderAccess**中的实现一致，所以关键就看写是如何实现的。再看**`volatile_barrier`**和`Assembler::Membar_mask_bits`干了什么：
+
+```
+void TemplateTable::volatile_barrier(Assembler::Membar_mask_bits order_constraint ) {
+  // Helper function to insert a is-volatile test and memory barrier
+  if( !os::is_MP() ) return;    // Not needed on single CPU
+  __ membar(order_constraint);
+}
+```
+
+**3）最终**：*jdk8u/hotspot/src/cpu/x86/vm/assembler_x86.hpp*
+
+```
+enum Membar_mask_bits {
+    StoreStore = 1 << 3,
+    LoadStore  = 1 << 2,
+    StoreLoad  = 1 << 1,
+    LoadLoad   = 1 << 0
+  };
+
+  // Serializes memory and blows flags
+  void membar(Membar_mask_bits order_constraint) {
+    if (os::is_MP()) {
+      // We only have to handle StoreLoad
+      if (order_constraint & StoreLoad) {
+        // All usable chips support "locked" instructions which suffice
+        // as barriers, and are much faster than the alternative of
+        // using cpuid instruction. We use here a locked add [esp],0.
+        // This is conveniently otherwise a no-op except for blowing
+        // flags.
+        // Any change to this code may need to revisit other places in
+        // the code where this idiom is used, in particular the
+        // orderAccess code.
+        lock();
+        addl(Address(rsp, 0), 0);// Assert the lock# signal here
+      }
+    }
+  }
+```
+
+可见只对**StoreLoad**加了屏障(基于**lock**实现)，其它几个屏障在cpu指令层面是不需要的，也与前面**OrderAccess**实现一致。
+
+<br/>
+
+## 5.references
 
 [^1]: [Memory Barriers Are Like Source Control Operations](https://preshing.com/20120710/memory-barriers-are-like-source-control-operations/)
 [^2]: [内存屏障及其在 JVM 内的应用（下）](https://segmentfault.com/a/1190000022508589)
@@ -153,4 +249,5 @@ inline void OrderAccess::fence() {
 [^4]:[全网最硬核 Java 新内存模型解析与实验 - 5. JVM 底层内存屏障源码分析](https://juejin.cn/post/7080890011217821710)
 [^5]: [What does __asm__ __volatile__ do in C?](https://stackoverflow.com/questions/26456510/what-does-asm-volatile-do-in-c)
 [^6]: [Intel® 64 Architecture Memory Ordering White Paper ](https://www.cs.cmu.edu/~410-f10/doc/Intel_Reordering_318147.pdf)
+[^7]: [How Volatile Modifier Works On JVM Level?](https://deepschneider.medium.com/how-volatile-works-on-jvm-level-7a250d38435d#:~:text=So%2C%20write%20operation%20to%20volatile,is%20synchronized%20with%20other%20core's)
 
