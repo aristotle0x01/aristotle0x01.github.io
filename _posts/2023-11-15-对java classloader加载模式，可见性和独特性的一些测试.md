@@ -21,6 +21,8 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 | delegate model | <img src="https://user-images.githubusercontent.com/2216435/283042893-f29e69bd-b536-425e-ba48-85e190548417.png" alt="delegation model" style="zoom:100%; float: left;" /> |
 | -------------- | ------------------------------------------------------------ |
 
+<br/>
+
 ### 1.1 java.lang.ClassLoader
 
 ```
@@ -117,8 +119,7 @@ public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundExce
 **jdk/src/share/native/java/lang/ClassLoader.c**
 
 ```
-
-  Java_java_lang_ClassLoader_findLoadedClass0(JNIEnv *env, jobject loader,
+	Java_java_lang_ClassLoader_findLoadedClass0(JNIEnv *env, jobject loader,
                                              jstring name)
   {
       if (name == NULL) {
@@ -127,8 +128,6 @@ public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundExce
           return JVM_FindLoadedClass(env, loader, name);
       }
   }
-
-
 ```
 
 **hotspot/src/share/vm/prims/jvm.cpp**
@@ -258,11 +257,13 @@ void SystemDictionary::define_instance_class(instanceKlassHandle k, TRAPS) {
 
 <br/>
 
-
-
 ## 2.一些测试
 
 自定义类加载器**CustomClassLoader**
+
+ https://github.com/aristotle0x01/en-route/blob/99f32a9394c2fd3cbd50c39ea14f1ffd0af620a6/java/java_reference/src/classloader/ClassLoaderTest.java#L88-L113
+
+...
 
 ```
 static class CustomClassLoader extends ClassLoader {
