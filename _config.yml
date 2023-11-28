@@ -1,7 +1,7 @@
 # Site settings
 title: My Blog
 SEOTitle: 博客 | Blog
-header-img: img/home-bg.jpg
+header-img: img/2216435.jpeg
 email: aristotle0x01@protonmail.com
 description: "hello, world"
 keyword: "keyword1, keyword2"
@@ -13,10 +13,7 @@ future: true
 
 # SNS settings
 RSS: false
-weibo_username: xxx
-zhihu_username: xxx
-github_username: xxx
-twitter_username: xxx
+twitter_username: xxx_ccp_xxx
 
 # Build settings
 # from 2016, 'pygments' is unsupported on GitHub Pages. Use 'rouge' for highlighting instead.
@@ -73,7 +70,7 @@ netease_comment: false
 # Sidebar settings
 sidebar: true # whether or not using Sidebar.
 sidebar-about-description: "hello world"
-sidebar-avatar: https://github.com/Huxpro.png # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/ceea1ed6-bd83-4e16-939c-a1966c77b7d9 # use absolute URL, seeing it's used in both `/` and `/about/`
 
 # Featured Tags
 featured-tags: true # whether or not using Feature-Tags
