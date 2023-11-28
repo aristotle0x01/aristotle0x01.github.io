@@ -4,7 +4,7 @@ SEOTitle: 博客 | Blog
 header-img: img/2216435.jpeg
 email: aristotle0x01@protonmail.com
 description: "hello, world"
-keyword: "keyword1, keyword2"
+keyword: "english, podcast, programming"
 url: "https://aristotle0x01.github.io" # your host, for absolute URL
 baseurl: "" # for example, '/blog' if your blog hosted on 'host/blog'
 
@@ -54,7 +54,7 @@ kramdown:
       start_line: 1
 
 # Disqus settings
-disqus_username: hux
+disqus_username: to_be_continued
 
 # Netease settings
 netease_comment: false
