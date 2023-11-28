@@ -27,7 +27,8 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 ### 1.1 java.lang.ClassLoader
 
 <details>
-  <summary><b>核心方法-></b></summary>
+  <summary><b>核心方法</b></summary>
+
 
 {% highlight java %}
 
@@ -85,12 +86,15 @@ protected Class<?> findClass(String name) throws ClassNotFoundException {
 
 ### 1.2 AppClassLoader
 
-jdk默认的应用类加载器：**jdk/src/share/classes/sun/misc/Launcher$AppClassLoader**
+<details>
+  <summary><b>jdk默认的应用类加载器：jdk/src/share/classes/sun/misc/Launcher$AppClassLoader</b></summary>
 
-```java
-public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
+
+  {% highlight java %}
+
+  public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
         {	
-        		...
+        		......
             if (ucp.knownToNotExist(name)) {
                 // The class of the given name is not found in the parent
                 // class loader as well as its local URLClassPath.
@@ -107,9 +111,12 @@ public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundExce
                 throw new ClassNotFoundException(name);
             }
 
-            return (super.loadClass(name, resolve));
-        }
-```
+return (super.loadClass(name, resolve));
+
+}
+
+{% endhighlight %}
+</details>
 
 基类**URLClassLoader**实现了**findClass** (->**native defineClass1**)，从源文件读取二进制内容，此处不表。
 

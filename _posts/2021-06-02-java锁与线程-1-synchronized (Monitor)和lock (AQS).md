@@ -263,7 +263,7 @@ java使用的是mesa语义，也就是说仅将激活线程放入ready 队列，
 
 
 
-## 6.References
+## 6.references
 
 [^1]: [What Is a Monitor in Computer Science?](https://www.baeldung.com/cs/monitor)
 [^2]: [Better monitors for Java：A Hoare-style monitor package for multithreaded programming in Java](https://www.infoworld.com/article/2077769/better-monitors-for-java.html)
