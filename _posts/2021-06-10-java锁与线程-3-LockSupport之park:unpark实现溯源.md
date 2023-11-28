@@ -2,6 +2,7 @@
 layout: post
 title:  "java锁与线程-3-LockSupport之park/unpark实现溯源"
 date:   2021-06-10
+categories: java thread hotspot jvm locksupport park unpark futex
 ---
 ## 1.茴字写法
 
