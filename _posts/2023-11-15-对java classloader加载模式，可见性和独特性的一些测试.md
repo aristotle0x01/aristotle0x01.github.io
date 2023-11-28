@@ -364,16 +364,16 @@ System.out.println("findClass:" + classf.getClassLoader());
 {% endhighlight %}
 </details>
 
-> // output
-> findClass:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
-> loadClass:sun.misc.Launcher$AppClassLoader@18b4aac2
-> classn: sun.misc.Launcher$AppClassLoader@18b4aac2
-> classl==classf:false
-> classl equals classf:false
-> classf==classn:false
-> classf equals classn:false
-> classl==classn:true
-> classl equals classn:true
+`// output`
+`findClass:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
+loadClass:sun.misc.Launcher$AppClassLoader@18b4aac2`
+`classn: sun.misc.Launcher$AppClassLoader@18b4aac2`
+`classl==classf:false
+classl equals classf:false
+classf==classn:false`
+`classf equals classn:false`
+`classl==classn:true`
+`classl equals classn:true`
 
 | classl == classn                                             |
 | ------------------------------------------------------------ |
