@@ -6,7 +6,7 @@ email: aristotle0x01@protonmail.com
 description: "hello, world"
 keyword: "keyword1, keyword2"
 url: "https://aristotle0x01.github.io" # your host, for absolute URL
-baseurl: "/archive" # for example, '/blog' if your blog hosted on 'host/blog'
+baseurl: "" # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
 future: true
