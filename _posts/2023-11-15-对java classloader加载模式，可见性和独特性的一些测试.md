@@ -24,59 +24,7 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 | :----------------------------------------------------------- |
 | <img src="https://user-images.githubusercontent.com/2216435/283042893-f29e69bd-b536-425e-ba48-85e190548417.png" alt="delegation model" style="zoom:100%; float: left;" /> |
 
-
-
 ### 1.1 java.lang.ClassLoader
-
-<details>
-  <summary><b>核心方法</b></summary>
-
-```java
-public Class<?> loadClass(String name) throws ClassNotFoundException {
-        return loadClass(name, false);
-    }
-
-protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
-    {
-        synchronized (getClassLoadingLock(name)) {
-            // First, check if the class has already been loaded
-            Class<?> c = findLoadedClass(name);
-            if (c == null) {
-                try {
-                    if (parent != null) {
-                        c = parent.loadClass(name, false);
-                    } else {
-                        c = findBootstrapClassOrNull(name);
-                    }
-                } catch (ClassNotFoundException e) {}
-
-​         if (c == null) {
-​                    // If still not found, then invoke findClass in order
-​                    // to find the class.
-​                    long t1 = System.nanoTime();
-​                    c = findClass(name);
-​                }
-
-​            }
-​            if (resolve) {
-​                resolveClass(c);
-​            }
-​            return c;
-
-​        }
-
-​    }
-
-protected Class<?> findClass(String name) throws ClassNotFoundException {
-        throw new ClassNotFoundException(name);
-    }
-```
-
-</details>
-
-
-
-测试---
 
 <details>
   <summary><b>核心方法</b></summary>
@@ -134,8 +82,6 @@ protected Class<?> findClass(String name) throws ClassNotFoundException {
   * 否则从**findClass**加载
 * **findClass**是留给自定义实现的入口
 
-<br/>
-
 ### 1.2 AppClassLoader
 
 <details>
@@ -181,8 +127,6 @@ return (super.loadClass(name, resolve));
 
 接下来略看一下<span style="color:blue">findLoadedClass--></span><span style="color:red">findLoadedClass0</span> 和<span style="color:blue">findClass--></span><span style="color:red">defineClass1</span>在jvm内部的实现。
 
-<br/>
-
 ### 1.3 findLoadedClass0与defineClass1
 
 #### 1.3.1 **findLoadedClass0**
@@ -225,8 +169,6 @@ JVM_END
 ```
 
 **SystemDictionary**是一个类似**hashmap**数据结构，可见其核心逻辑即为根据class name从中取出类对象。
-
-<br/>
 
 #### 1.3.2 **defineClass1**
 
@@ -326,8 +268,6 @@ void SystemDictionary::define_instance_class(instanceKlassHandle k, TRAPS) {
 }
 ```
 
-<br/>
-
 ## 2.一些测试
 
 自定义类加载器**CustomClassLoader**
@@ -380,8 +320,6 @@ public class Test1 {
 }
 ```
 
-<br/>
-
 ### 2.1 loadClass vs findClass
 
 * findclass 会新生成类对象，故加载器为**CustomClassLoader**； loadClass使用默认逻辑，类加载器为**AppClassLoader**
@@ -433,8 +371,6 @@ classl equals classn:true
 | ------------------------------------------------------------ |
 | <img src="https://user-images.githubusercontent.com/2216435/283103479-bd679e81-a6b7-4c2f-9126-149e471eeea7.png" alt="delegation model" style="zoom:80%; float: left;" /> |
 
-<br/>
-
 ### 2.2 同一个加载器类
 
 * 两个加载器实例(类相同)加载同一个类，结果不同
@@ -473,8 +409,6 @@ class2:class classloader.Test1@299a06ac
 class1==class2:false
 class1 equals class2:false
 ```
-
-<br/>
 
 ### 2.3 不同类加载器加载类产生的对象
 
@@ -528,8 +462,6 @@ o1 equals o2: true
 o2 equals of: false
 ```
 
-<br/>
-
 ## 3. 类加载的两个典型应用
 
 ### 3.1. mysql驱动加载
@@ -541,8 +473,6 @@ o2 equals of: false
 * java.sql.DriverManager调用getConnection时加载
 
 本文为了测试类加载过程，选择第三种
-
-<br/>
 
 #### 3.1.2 自行加载
 
@@ -608,9 +538,7 @@ static {
 
 步骤3: `DriverManager.getConnection`逐个尝试驱动，直到链接成功
 
-<br/>
-
-#### 3.1.3 就这么简单吗？
+#### 3.1.3 真这么简单吗？
 
 从上面的步骤来看，加载过程似乎平淡无奇。其实有点内涵，**java.sql.DriverManager**由**bootstrapclassloader**加载(debug验证classloader时返回null)。如此说来loadInitialDrivers中`com.mysql.jdbc.Driver`也应当由**bootstrapclassloader**加载(caller规则)，但这显然是违反jdk安全的，而且经测试其实是由`AppClassLoader`(它才能扫描到应用CLASSPATH)加载的。问题出在哪里呢[^3]？
 
@@ -627,8 +555,6 @@ public static <S> ServiceLoader<S> load(Class<S> service) {
 * **bootstrapclassloader**则已到顶端，既没有更上层加载器，自身也无法加载
 * ContextClassLoader[^2]相当于主动降低了加载层级
 
-<br/>
-
 ### 3.2.tomcat 类加载机制
 
 | tomcat classloader hierarchy                                 |
@@ -643,8 +569,6 @@ tomcat加载规则，可见webapp层打破了delegation默认加载规则[^4]：
 | Extension class loader       | \$JAVA_HOME/jre/lib/ext                                      |
 | system class loader          | \$CATALINA_HOME/bin/bootstrap.jar<br/>\$CATALINA_HOME/bin/tomcat-juli.jar |
 | common class loader          | \$CATALINA_HOME/lib                                          |
-
-<br/>
 
 ## 4.类的命名空间(namespace)
 
@@ -732,8 +656,6 @@ bool Dictionary::equals(Symbol* class_name, ClassLoaderData* loader_data) const 
 * **Test1**第一次由**AppClassLoader**加载，第二次由**CustomClassLoader**加载
 * 在**compute_hash**计算时，name_hash两次一致(可debug验证[^6])，但由于加载器不同，最终hash不同
 * 因为加载器**loader_hash**导致了最终hash不同，可以认为由不同加载器定义了独立的命名空间
-
-<br/>
 
 ## 5.references
 
