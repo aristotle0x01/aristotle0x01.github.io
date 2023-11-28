@@ -28,9 +28,10 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 
 **核心方法->**
 
-[expand]
+<details>
+<summary>Preview</summary>
+{% highlight java %}
 
-```java
 public Class<?> loadClass(String name) throws ClassNotFoundException {
         return loadClass(name, false);
     }
@@ -47,29 +48,32 @@ protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundE
                     } else {
                         c = findBootstrapClassOrNull(name);
                     }
-                } catch (ClassNotFoundException e) {...}
+                } catch (ClassNotFoundException e) {}
 
-                if (c == null) {
-                    // If still not found, then invoke findClass in order
-                    // to find the class.
-                    long t1 = System.nanoTime();
-                    c = findClass(name);
-                    ...
-                }
-            }
-            if (resolve) {
-                resolveClass(c);
-            }
-            return c;
-        }
-    }
+if (c == null) {
+    // If still not found, then invoke findClass in order
+    // to find the class.
+    long t1 = System.nanoTime();
+    c = findClass(name);
+}
+
+}
+if (resolve) {
+    resolveClass(c);
+}
+return c;
+
+}
+
+}
 
 protected Class<?> findClass(String name) throws ClassNotFoundException {
         throw new ClassNotFoundException(name);
     }
-```
 
-[/expand]
+{% endhighlight %}
+
+</details>
 
 * loadClass (public)是一般情况下对外提供的API，具体实现在loadClass (protected)
 * loadClass (protected)
