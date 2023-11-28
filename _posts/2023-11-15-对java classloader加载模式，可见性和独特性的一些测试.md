@@ -478,9 +478,11 @@ o2 equals of: false
 
 <br/>
 
-## 3. mysql驱动加载
+## 3. 类加载的两个典型应用
 
-### 3.1 加载方式
+### 3.1. mysql驱动加载
+
+#### 3.1.1 加载方式
 
 * java.sql.DriverManager通过系统属性jdbc.drivers加载(启动加jvm参数 -Djdbc.drivers=com.mysql.jdbc.Driver)
 * 通过Class.forName("com.mysql.jdbc.Driver")加载
@@ -490,7 +492,7 @@ o2 equals of: false
 
 <br/>
 
-### 3.2 自行加载
+#### 3.1.2 自行加载
 
 **测试代码：**
 
@@ -556,7 +558,7 @@ static {
 
 <br/>
 
-### 3.3 就这么简单吗？
+#### 3.1.3 就这么简单吗？
 
 从上面的步骤来看，加载过程似乎平淡无奇。其实有点内涵，**java.sql.DriverManager**由**bootstrapclassloader**加载(debug验证classloader时返回null)。如此说来loadInitialDrivers中`com.mysql.jdbc.Driver`也应当由**bootstrapclassloader**加载(caller规则)，但这显然是违反jdk安全的，而且经测试其实是由`AppClassLoader`(它才能扫描到应用CLASSPATH)加载的。问题出在哪里呢[^3]？
 
@@ -575,7 +577,7 @@ public static <S> ServiceLoader<S> load(Class<S> service) {
 
 <br/>
 
-## 4.tomcat 类加载机制
+### 3.2.tomcat 类加载机制
 
 | tomcat classloader hierarchy                                 |
 | ------------------------------------------------------------ |
@@ -592,6 +594,95 @@ tomcat加载规则，可见webapp层打破了delegation默认加载规则[^4]：
 
 <br/>
 
+## 4.类的命名空间(namespace)
+
+在类加载相关文献中，经常会看到命名空间一说。从逻辑上可以想象每个加载器实例单独维护所有加载的类列表，那么这个加载器实例即构成一个命名空间。当然，具体实现未必如此，openjdk/hotspot中根据加载器实例和待加载类名联合生成hash来达成的。
+
+> The Java Virtual Machine maintains a list of the names of all the types already loaded by each class loader. Each of these lists forms a name space inside the Java Virtual Machine[^5]
+
+下面我们可以找一段java代码，验证一下：
+
+<details>
+  <summary><b>测试java代码</b></summary>
+
+
+
+{% highlight java %}
+
+{
+    Class<?> class1 = Test1.class; // AppClassLoader加载
+    CustomClassLoader classLoader1 = new CustomClassLoader();
+    Class<?> class2 = classLoader1.findClass("classloader.ClassLoaderTest2$Test1");// CustomClassLoader加载
+    System.out.println("class1: " + class1.getClassLoader());
+    System.out.println("class2: " + class2.getClassLoader());
+    System.out.println("equals: " + (class1 == class2));
+    }
+
+{% endhighlight %}
+
+</details>
+
+在前面类的加载实现时，我们提到了类编译后“.class”的二进制文件由**`defineClass1`**加载，其内部最终调用了**SystemDictionary::update_dictionary**，将加载后的Class对象放入其中。**SystemDictionary**是jvm存储已加载类对象的hashmap实现。考察其插入对象时，是如何计算hash和索引位置，就明白namespace到底是什么意思了。
+
+```c++
+Klass* sd_check = find_class(d_index, d_hash, name, loader_data);
+if (sd_check == NULL) {
+	dictionary()->add_klass(name, loader_data, k);
+	......
+}
+```
+
+意思是，先查找，如果没有则将加载类放入hashmap。先看**dictionary()->add_klass**：
+
+```
+void Dictionary::add_klass(Symbol* class_name, ClassLoaderData* loader_data,
+                           KlassHandle obj) {
+	......
+  unsigned int hash = compute_hash(class_name, loader_data);
+  int index = hash_to_index(hash);
+  DictionaryEntry* entry = new_entry(hash, obj(), loader_data);
+  add_entry(index, entry);
+}
+
+unsigned int compute_hash(Symbol* name, ClassLoaderData* loader_data) {
+    unsigned int name_hash = name->identity_hash();
+    ......
+    unsigned int loader_hash = loader_data == NULL ? 0 : loader_data->identity_hash();
+    return name_hash ^ loader_hash;
+  }
+```
+
+可见容器索引hash的计算是依靠类名和加载器实例组合而成。再看**find_class(d_index, d_hash, name, loader_data)**：
+
+```
+DictionaryEntry* Dictionary::get_entry(int index, unsigned int hash,
+                                       Symbol* class_name,
+                                       ClassLoaderData* loader_data) {
+  for (DictionaryEntry* entry = bucket(index); entry != NULL; entry = entry->next()) {
+    if (entry->hash() == hash && entry->equals(class_name, loader_data)) {
+      return entry;
+    }
+  }
+  return NULL;
+}
+
+bool Dictionary::equals(Symbol* class_name, ClassLoaderData* loader_data) const {
+    Klass* klass = (Klass*)literal();
+    return (InstanceKlass::cast(klass)->name() == class_name &&
+            _loader_data == loader_data);
+  }
+```
+
+可见，查找时，先比较hash值，然后再次确认类名和加载器实例是否一致。
+
+结论：
+
+* **Test1**第一次由**AppClassLoader**加载，第二次由**CustomClassLoader**加载
+* 在**compute_hash**计算时，name_hash两次一致(可debug验证[^6])，但由于加载器不同，最终hash不同
+* 因为加载器**loader_hash**导致了最终hash不同，可以认为由不同加载器定义了独立的命名空间
+
+<br/>
+
 ## 5.references
 
 [^1]:[Why do I need to override the equals and hashCode methods in Java?](https://stackoverflow.com/questions/2265503/why-do-i-need-to-override-the-equals-and-hashcode-methods-in-java)
@@ -599,4 +690,6 @@ tomcat加载规则，可见webapp层打破了delegation默认加载规则[^4]：
 [^3]:[为什么需要ContextClassLoader](https://www.cnblogs.com/guiblog/p/14244064.html)
 
 [^4]:[Class Loaders ](http://www.datadisk.co.uk/html_docs/java_app/tomcat6/tomcat6_classloaders.htm)
+[^5]: [Inside the Java Virtual Machine: by Bill Venners](https://www.artima.com/insidejvm/ed2/index.html)
+[^6]: [centos7_build_openjdk8](https://github.com/aristotle0x01/centos7_build_openjdk8)
 
