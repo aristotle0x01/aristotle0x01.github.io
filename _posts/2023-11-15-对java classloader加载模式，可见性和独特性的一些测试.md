@@ -118,6 +118,8 @@ return (super.loadClass(name, resolve));
 {% endhighlight %}
 </details>
 
+
+
 基类**URLClassLoader**实现了**findClass** (->**native defineClass1**)，从源文件读取二进制内容，此处不表。
 
 核心逻辑：
@@ -334,14 +336,18 @@ public class Test1 {
 * **classl**与**classf**为不同类对象
 * **classl**与**classn**完全相同(第二次从缓存加载)
 
-```java
-{
+<details>
+  <summary><b>测试代码</b></summary>
+
+  {% highlight java %}
+
+ {
 	CustomClassLoader classLoader1 = new CustomClassLoader();
 	Class<?> classl = classLoader1.loadClass("classloader.Test1");
 	Class<?> classf = classLoader1.findClass("classloader.Test1");
 	Class<?> classn = Test1.class;
 
-	System.out.println("findClass:" + classf.getClassLoader());
+System.out.println("findClass:" + classf.getClassLoader());
 	System.out.println("loadClass:" + classl.getClassLoader());
 	System.out.println("classn: " + classn.getClassLoader());
 	System.out.println("classl==classf:" + (classl==classf));
@@ -352,19 +358,22 @@ public class Test1 {
 	System.out.println("classl==classn:" + (classl==classn));
 	System.out.println("classl equals classn:" + (classl.equals(classn)));
 	System.out.println("");
+
 }
 
-// output
-findClass:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
-loadClass:sun.misc.Launcher$AppClassLoader@18b4aac2
-classn: sun.misc.Launcher$AppClassLoader@18b4aac2
-classl==classf:false
-classl equals classf:false
-classf==classn:false
-classf equals classn:false
-classl==classn:true
-classl equals classn:true
-```
+{% endhighlight %}
+</details>
+
+> // output
+> findClass:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
+> loadClass:sun.misc.Launcher$AppClassLoader@18b4aac2
+> classn: sun.misc.Launcher$AppClassLoader@18b4aac2
+> classl==classf:false
+> classl equals classf:false
+> classf==classn:false
+> classf equals classn:false
+> classl==classn:true
+> classl equals classn:true
 
 | classl == classn                                             |
 | ------------------------------------------------------------ |
@@ -376,33 +385,39 @@ classl equals classn:true
 
 * 两个加载器实例(类相同)加载同一个类，结果不同
 
-```java
-{
+<details>
+  <summary><b>测试代码</b></summary>
+    {% highlight java %}
+ {
 	// 不同加载器，则类不同
 	CustomClassLoader classLoader1 = new CustomClassLoader();
 	Class<?> class1 = classLoader1.findClass("classloader.Test1");
 
-	CustomClassLoader classLoader2 = new CustomClassLoader();
+CustomClassLoader classLoader2 = new CustomClassLoader();
 	Class<?> class2 = classLoader2.findClass("classloader.Test1");
 
-	System.out.println("classLoader1:" + class1.getClassLoader());
-	System.out.println("classLoader2:" + class2.getClassLoader());
-	System.out.println("class1:" + class1 + "@" + Integer.toHexString(class1.hashCode()));
-	System.out.println("class2:" + class2 + "@" + Integer.toHexString(class2.hashCode()));
-	System.out.println("class1==class2:" + (class1==class2));
-	System.out.println("class1 equals class2:" + (class1.equals(class2)));
+​	System.out.println("classLoader1:" + class1.getClassLoader());
+​	System.out.println("classLoader2:" + class2.getClassLoader());
+​	System.out.println("class1:" + class1 + "@" + Integer.toHexString(class1.hashCode()));
+​	System.out.println("class2:" + class2 + "@" + Integer.toHexString(class2.hashCode()));
+​	System.out.println("class1==class2:" + (class1==class2));
+​	System.out.println("class1 equals class2:" + (class1.equals(class2)));
 
-	System.out.println("");
+​	System.out.println("");
+
 }
 
-// output
-classLoader1:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
-classLoader2:classloader.ClassLoaderTest$CustomClassLoader@e73f9ac
-class1:class classloader.Test1@7b1d7fff
-class2:class classloader.Test1@299a06ac
-class1==class2:false
-class1 equals class2:false
-```
+{% endhighlight %}
+</details>
+
+> // output
+> classLoader1:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
+>
+> classLoader2:classloader.ClassLoaderTest$CustomClassLoader@e73f9ac
+> class1:class classloader.Test1@7b1d7fff
+> class2:class classloader.Test1@299a06ac
+> class1==class2:false
+> class1 equals class2:false
 
 <br/>
 
@@ -414,40 +429,47 @@ class1 equals class2:false
 
   反过来说，**equals**重载时，也需要注意类是否同一个加载器加载
 
-```java
+<details>
+  <summary><b>测试代码</b></summary>
+  {% highlight java %}
+
 {
 	CustomClassLoader classLoader1 = new CustomClassLoader();
 	Class<?> class1 = classLoader1.loadClass("classloader.Test1");
 	Class<?> classf = classLoader1.findClass("classloader.Test1");
 
-	Class<?> class2 = Test1.class;
-	System.out.println("equals: " + (class1 == class2));
+​	Class<?> class2 = Test1.class;
+​	System.out.println("equals: " + (class1 == class2));
 
-	Test1 t3 = new Test1();
-	Test1 t4 = new Test1();
-	System.out.println("t3==t4: " + (t3 == t4));
-	System.out.println("t3 equals t4: " + (t3.equals(t4)));
+​	Test1 t3 = new Test1();
+​	Test1 t4 = new Test1();
+​	System.out.println("t3==t4: " + (t3 == t4));
+​	System.out.println("t3 equals t4: " + (t3.equals(t4)));
 
-	Object o1 = class1.newInstance();
-	Field f1 = class1.getField("a1");
-	f1.setInt(o1, 1);
-	Test1 o2 = (Test1) class2.newInstance();
-	Field f2 = class2.getField("a1");
-	f2.setInt(o2, 1);
-	System.out.println("o1 equals o2: " + (o2.equals(o1)));
-	Object of = classf.newInstance();
-	Field ff = classf.getField("a1");
-	ff.setInt(of, 1);
-  System.out.println("o2 equals of: " + (o2.equals(of)));
+​	Object o1 = class1.newInstance();
+​	Field f1 = class1.getField("a1");
+​	f1.setInt(o1, 1);
+​	Test1 o2 = (Test1) class2.newInstance();
+​	Field f2 = class2.getField("a1");
+​	f2.setInt(o2, 1);
+​	System.out.println("o1 equals o2: " + (o2.equals(o1)));
+​	Object of = classf.newInstance();
+​	Field ff = classf.getField("a1");
+​	ff.setInt(of, 1);
+
+​	System.out.println("o2 equals of: " + (o2.equals(of)));
 }
 
-// output
-equals: true
-t3==t4: false
-t3 equals t4: true
-o1 equals o2: true
-o2 equals of: false
-```
+  {% endhighlight %}
+
+</details>
+
+> // output
+> equals: true
+> t3==t4: false
+> t3 equals t4: true
+> o1 equals o2: true
+> o2 equals of: false
 
 <br/>
 
@@ -567,9 +589,9 @@ tomcat加载规则，可见webapp层打破了delegation默认加载规则[^4]：
 
 ## 5.references
 
-[^1]: [Why do I need to override the equals and hashCode methods in Java?](https://stackoverflow.com/questions/2265503/why-do-i-need-to-override-the-equals-and-hashcode-methods-in-java)
-[^2]: [Difference between thread's context class loader and normal classloader](https://stackoverflow.com/questions/1771679/difference-between-threads-context-class-loader-and-normal-classloader)
+[^1]:[Why do I need to override the equals and hashCode methods in Java?](https://stackoverflow.com/questions/2265503/why-do-i-need-to-override-the-equals-and-hashcode-methods-in-java)
+[^2]:[Difference between thread's context class loader and normal classloader](https://stackoverflow.com/questions/1771679/difference-between-threads-context-class-loader-and-normal-classloader)
 [^3]:[为什么需要ContextClassLoader](https://www.cnblogs.com/guiblog/p/14244064.html)
 
-[^4]: [Class Loaders ](http://www.datadisk.co.uk/html_docs/java_app/tomcat6/tomcat6_classloaders.htm)
+[^4]:[Class Loaders ](http://www.datadisk.co.uk/html_docs/java_app/tomcat6/tomcat6_classloaders.htm)
 
