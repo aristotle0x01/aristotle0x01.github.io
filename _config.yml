@@ -28,7 +28,7 @@ twitter_username: xxx_ccp_xxx
 github_username:  aristotle0x01
 
 # Build settings
-theme: minima
+theme: monokai
 plugins:
   - jekyll-feed
 
