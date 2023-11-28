@@ -2,6 +2,7 @@
 layout: page
 title: Readme
 permalink: /readme/
+
 ---
 
 Those links helped me building this minimalist site:
@@ -16,4 +17,5 @@ Those links helped me building this minimalist site:
 
 for local preview, you may have to constantly battle with 'bundle update/bundle install',
 just: 
+
 >bundle exec jekyll serve --livereload
