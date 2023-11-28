@@ -3,4 +3,5 @@
 
 > Logging.
 
-![mars](images-assets.nasa.gov/image/PIA01120/PIA01120~orig.jpg)
+![mars](img/PIA17486_medium.jpg)
+
