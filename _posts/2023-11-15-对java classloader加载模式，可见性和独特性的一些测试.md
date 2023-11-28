@@ -26,11 +26,10 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 
 ### 1.1 java.lang.ClassLoader
 
-```
-{% details 核心方法 %}
+**核心方法->**[expand]
 
-	~~~ java
-	public Class<?> loadClass(String name) throws ClassNotFoundException {
+```java
+public Class<?> loadClass(String name) throws ClassNotFoundException {
         return loadClass(name, false);
     }
 
@@ -66,9 +65,9 @@ protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundE
 protected Class<?> findClass(String name) throws ClassNotFoundException {
         throw new ClassNotFoundException(name);
     }
-	~~~
-{% enddetails %}
 ```
+
+[/expand]
 
 * loadClass (public)是一般情况下对外提供的API，具体实现在loadClass (protected)
 * loadClass (protected)
