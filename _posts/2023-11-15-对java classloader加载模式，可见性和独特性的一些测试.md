@@ -26,10 +26,9 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 
 ### 1.1 java.lang.ClassLoader
 
-**核心方法->**
-
 <details>
-<summary>Preview</summary>
+<summary>**核心方法->**</summary>
+
 {% highlight java %}
 
 public Class<?> loadClass(String name) throws ClassNotFoundException {
@@ -50,22 +49,22 @@ protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundE
                     }
                 } catch (ClassNotFoundException e) {}
 
-if (c == null) {
-    // If still not found, then invoke findClass in order
-    // to find the class.
-    long t1 = System.nanoTime();
-    c = findClass(name);
-}
+​         if (c == null) {
+​                    // If still not found, then invoke findClass in order
+​                    // to find the class.
+​                    long t1 = System.nanoTime();
+​                    c = findClass(name);
+​                }
 
-}
-if (resolve) {
-    resolveClass(c);
-}
-return c;
+​            }
+​            if (resolve) {
+​                resolveClass(c);
+​            }
+​            return c;
 
-}
+​        }
 
-}
+​    }
 
 protected Class<?> findClass(String name) throws ClassNotFoundException {
         throw new ClassNotFoundException(name);
