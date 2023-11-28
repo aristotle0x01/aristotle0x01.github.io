@@ -31,6 +31,7 @@ github_username:  aristotle0x01
 theme: minima
 plugins:
   - jekyll-feed
+  - details_tag.rb
 
 # Exclude from processing.
 # The following items will not be processed, by default.

@@ -26,50 +26,49 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 
 ### 1.1 java.lang.ClassLoader
 
-<details>
-  <summary>核心方法</summary>
-  
+```
+{% details 核心方法 %}
 
 	~~~ java
 	public Class<?> loadClass(String name) throws ClassNotFoundException {
-	        return loadClass(name, false);
-	    }
-	
-	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
-	    {
-	        synchronized (getClassLoadingLock(name)) {
-	            // First, check if the class has already been loaded
-	            Class<?> c = findLoadedClass(name);
-	            if (c == null) {
-	                try {
-	                    if (parent != null) {
-	                        c = parent.loadClass(name, false);
-	                    } else {
-	                        c = findBootstrapClassOrNull(name);
-	                    }
-	                } catch (ClassNotFoundException e) {...}
-	
-	                if (c == null) {
-	                    // If still not found, then invoke findClass in order
-	                    // to find the class.
-	                    long t1 = System.nanoTime();
-	                    c = findClass(name);
-	                    ...
-	                }
-	            }
-	            if (resolve) {
-	                resolveClass(c);
-	            }
-	            return c;
-	        }
-	    }
-	
-	protected Class<?> findClass(String name) throws ClassNotFoundException {
-	        throw new ClassNotFoundException(name);
-	    }
-	~~~
+        return loadClass(name, false);
+    }
 
-</details>
+protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
+    {
+        synchronized (getClassLoadingLock(name)) {
+            // First, check if the class has already been loaded
+            Class<?> c = findLoadedClass(name);
+            if (c == null) {
+                try {
+                    if (parent != null) {
+                        c = parent.loadClass(name, false);
+                    } else {
+                        c = findBootstrapClassOrNull(name);
+                    }
+                } catch (ClassNotFoundException e) {...}
+
+                if (c == null) {
+                    // If still not found, then invoke findClass in order
+                    // to find the class.
+                    long t1 = System.nanoTime();
+                    c = findClass(name);
+                    ...
+                }
+            }
+            if (resolve) {
+                resolveClass(c);
+            }
+            return c;
+        }
+    }
+
+protected Class<?> findClass(String name) throws ClassNotFoundException {
+        throw new ClassNotFoundException(name);
+    }
+	~~~
+{% enddetails %}
+```
 
 * loadClass (public)是一般情况下对外提供的API，具体实现在loadClass (protected)
 * loadClass (protected)
