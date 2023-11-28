@@ -622,7 +622,7 @@ tomcat加载规则，可见webapp层打破了delegation默认加载规则[^4]：
 
 </details>
 
-在前面类的加载实现时，我们提到了类编译后“.class”的二进制文件由**`defineClass1`**加载，其内部最终调用了**SystemDictionary::update_dictionary**，将加载后的Class对象放入其中。**SystemDictionary**是jvm存储已加载类对象的hashmap实现。考察其插入对象时，是如何计算hash和索引位置，就明白namespace到底是什么意思了。
+在前面类的加载实现时，我们提到了类编译后“.class”的二进制文件由**`defineClass1`**加载，其内部最终调用了**SystemDictionary::update_dictionary**，将加载后的Class对象放入其中。**SystemDictionary**是jvm存储已加载类对象的hashmap实现。考察其插入对象时如何计算hash和索引位置，就明白namespace到底是什么意思了。
 
 ```c++
 Klass* sd_check = find_class(d_index, d_hash, name, loader_data);
