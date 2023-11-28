@@ -364,16 +364,18 @@ System.out.println("findClass:" + classf.getClassLoader());
 {% endhighlight %}
 </details>
 
-`// output`
-`findClass:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
-loadClass:sun.misc.Launcher$AppClassLoader@18b4aac2`
-`classn: sun.misc.Launcher$AppClassLoader@18b4aac2`
-`classl==classf:false
+```
+// output
+findClass:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
+loadClass:sun.misc.Launcher$AppClassLoader@18b4aac2
+classn: sun.misc.Launcher$AppClassLoader@18b4aac2
+classl==classf:false
 classl equals classf:false
-classf==classn:false`
-`classf equals classn:false`
-`classl==classn:true`
-`classl equals classn:true`
+classf==classn:false
+classf equals classn:false
+classl==classn:true
+classl equals classn:true
+```
 
 | classl == classn                                             |
 | ------------------------------------------------------------ |
@@ -410,14 +412,15 @@ CustomClassLoader classLoader2 = new CustomClassLoader();
 {% endhighlight %}
 </details>
 
-> // output
-> classLoader1:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
->
-> classLoader2:classloader.ClassLoaderTest$CustomClassLoader@e73f9ac
-> class1:class classloader.Test1@7b1d7fff
-> class2:class classloader.Test1@299a06ac
-> class1==class2:false
-> class1 equals class2:false
+```
+// output
+classLoader1:classloader.ClassLoaderTest$CustomClassLoader@6ed3ef1
+classLoader2:classloader.ClassLoaderTest$CustomClassLoader@e73f9ac
+class1:class classloader.Test1@7b1d7fff
+class2:class classloader.Test1@299a06ac
+class1==class2:false
+class1 equals class2:false
+```
 
 <br/>
 
@@ -464,12 +467,14 @@ CustomClassLoader classLoader2 = new CustomClassLoader();
 
 </details>
 
-> // output
-> equals: true
-> t3==t4: false
-> t3 equals t4: true
-> o1 equals o2: true
-> o2 equals of: false
+```
+// output
+equals: true
+t3==t4: false
+t3 equals t4: true
+o1 equals o2: true
+o2 equals of: false
+```
 
 <br/>
 
