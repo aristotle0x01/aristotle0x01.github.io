@@ -29,14 +29,6 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 **核心方法->**
 
 [expand]
-Long content here
-and here
-...
-[/expand]
-
-**Test**:
-
-[expand]
 
 ```java
 public Class<?> loadClass(String name) throws ClassNotFoundException {
