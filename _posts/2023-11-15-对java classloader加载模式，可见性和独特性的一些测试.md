@@ -26,7 +26,17 @@ java **classloader**这个topic可以说是个java boy都要唠两句，烂大�
 
 ### 1.1 java.lang.ClassLoader
 
-**核心方法->**[expand]
+**核心方法->**
+
+[expand]
+Long content here
+and here
+...
+[/expand]
+
+**Test**:
+
+[expand]
 
 ```java
 public Class<?> loadClass(String name) throws ClassNotFoundException {
@@ -82,7 +92,7 @@ protected Class<?> findClass(String name) throws ClassNotFoundException {
 
 jdk默认的应用类加载器：**jdk/src/share/classes/sun/misc/Launcher$AppClassLoader**
 
-```
+```java
 public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
         {	
         		...
@@ -123,7 +133,7 @@ public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundExce
 
 **jdk/src/share/native/java/lang/ClassLoader.c**
 
-```
+```c++
 	Java_java_lang_ClassLoader_findLoadedClass0(JNIEnv *env, jobject loader,
                                              jstring name)
   {
@@ -137,7 +147,7 @@ public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundExce
 
 **hotspot/src/share/vm/prims/jvm.cpp**
 
-```
+```c++
 JVM_ENTRY(jclass, JVM_FindLoadedClass(JNIEnv *env, jobject loader, jstring name))
   ...
   Klass* k = SystemDictionary::find_instance_or_array_klass(klass_name,
@@ -164,7 +174,7 @@ JVM_END
 
 #### 1.3.2 **defineClass1**
 
-```
+```c++
 JNIEXPORT jclass JNICALL
 Java_java_lang_ClassLoader_defineClass1(JNIEnv *env,
                                         jobject loader,
@@ -183,7 +193,7 @@ Java_java_lang_ClassLoader_defineClass1(JNIEnv *env,
 
 **jvm_define_class_common**:
 
-```
+```c++
 // common code for JVM_DefineClass() and JVM_DefineClassWithSource()
 // and JVM_DefineClassWithSourceCond()
 static jclass jvm_define_class_common(JNIEnv *env, const char *name,
@@ -203,7 +213,7 @@ static jclass jvm_define_class_common(JNIEnv *env, const char *name,
 
 **SystemDictionary::resolve_from_stream**: 完成文件读取解析，并放入hashmap
 
-```
+```c++
 // Add a klass to the system from a stream (called by jni_DefineClass and
 // JVM_DefineClass).
 Klass* SystemDictionary::resolve_from_stream(Symbol* class_name,
@@ -235,7 +245,7 @@ Klass* SystemDictionary::resolve_from_stream(Symbol* class_name,
 
 **define_instance_class**: 放入hashmap
 
-```
+```c++
 void SystemDictionary::define_instance_class(instanceKlassHandle k, TRAPS) {
   ...
   // Add the new class. We need recompile lock during update of CHA.
@@ -266,7 +276,7 @@ void SystemDictionary::define_instance_class(instanceKlassHandle k, TRAPS) {
 
 自定义类加载器**CustomClassLoader**
 
-```
+```java
 static class CustomClassLoader extends ClassLoader {
     @Override
     public Class findClass(String name) throws ClassNotFoundException {
@@ -295,7 +305,7 @@ static class CustomClassLoader extends ClassLoader {
 
 测试加载类
 
-```
+```java
 public class Test1 {
     public int a1;
 
@@ -322,7 +332,7 @@ public class Test1 {
 * **classl**与**classf**为不同类对象
 * **classl**与**classn**完全相同(第二次从缓存加载)
 
-```
+```java
 {
 	CustomClassLoader classLoader1 = new CustomClassLoader();
 	Class<?> classl = classLoader1.loadClass("classloader.Test1");
@@ -364,7 +374,7 @@ classl equals classn:true
 
 * 两个加载器实例(类相同)加载同一个类，结果不同
 
-```
+```java
 {
 	// 不同加载器，则类不同
 	CustomClassLoader classLoader1 = new CustomClassLoader();
@@ -402,7 +412,7 @@ class1 equals class2:false
 
   反过来说，**equals**重载时，也需要注意类是否同一个加载器加载
 
-```
+```java
 {
 	CustomClassLoader classLoader1 = new CustomClassLoader();
 	Class<?> class1 = classLoader1.loadClass("classloader.Test1");
@@ -475,7 +485,7 @@ static {
 
 **loadInitialDrivers**中经由`ServiceLoader.load(Driver.class)` 和`driversIterator.next()`完成`com.mysql.jdbc.Driver`类加载
 
-```
+```java
 private static void loadInitialDrivers() {
 				...
 				
@@ -503,7 +513,7 @@ private static void loadInitialDrivers() {
 
 步骤2: `com/mysql/jdbc/Driver.java`
 
-```
+```java
 static {
         try {
             java.sql.DriverManager.registerDriver(new Driver());
@@ -521,7 +531,7 @@ static {
 
 从上面的步骤来看，加载过程似乎平淡无奇。其实有点内涵，**java.sql.DriverManager**由**bootstrapclassloader**加载(debug验证classloader时返回null)。如此说来loadInitialDrivers中`com.mysql.jdbc.Driver`也应当由**bootstrapclassloader**加载(caller规则)，但这显然是违反jdk安全的，而且经测试其实是由`AppClassLoader`(它才能扫描到应用CLASSPATH)加载的。问题出在哪里呢[^3]？
 
-```
+```java
 public static <S> ServiceLoader<S> load(Class<S> service) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         return ServiceLoader.load(service, cl);
