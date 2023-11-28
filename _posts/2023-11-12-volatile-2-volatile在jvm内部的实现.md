@@ -2,7 +2,13 @@
 layout: post
 title:  "volatile-2-volatile在jvm内部的实现"
 date:   2023-11-12
-categories: jitwatch volatile JIT instruction memory barrier x86
+catalog: true
+tags:
+    - volatile
+    - java
+    - JIT
+    - memory barrier
+    - jitwatch
 ---
 
 

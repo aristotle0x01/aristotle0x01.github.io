@@ -2,7 +2,11 @@
 layout: post
 title:  "zookeeper-3-zab协议"
 date:   2021-05-17
-categories: zookeeper zab leader
+catalog: true
+tags:
+    - zookeeper
+    - zab
+    - leader
 ---
 # zab协议
 

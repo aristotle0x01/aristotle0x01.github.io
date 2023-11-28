@@ -2,7 +2,12 @@
 layout: post
 title:  "eureka集群参数配置与基于tcpdump的行为观测"
 date:   2021-02-05
-categories: eureka 注册中心 spring-cloud tcpdump
+catalog: true
+tags:
+    - eureka
+    - 注册中心
+    - spring-cloud
+    - tcpdump
 ---
 ## 1.背景
 

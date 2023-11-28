@@ -2,7 +2,10 @@
 layout: post
 title:  "zookeeper-2-搭建本地docker集群"
 date:   2021-05-12
-categories: zookeeper
+catalog: true
+tags:
+    - zookeeper
+    - docker
 ---
 # zookeeper-2-搭建本地docker集群
 
