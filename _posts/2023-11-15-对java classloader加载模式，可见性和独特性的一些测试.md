@@ -268,6 +268,46 @@ void SystemDictionary::define_instance_class(instanceKlassHandle k, TRAPS) {
 }
 ```
 
+### 1.4 jdk和jvm中类加载的核心类
+
+默认**openjdk8u**为准。
+
+**jdk**
+
+* java.lang.ClassLoader.java
+  * loadClass -> findLoadedClass0
+  * defineClass -> defineClass0, defineClass1, defineClass2
+  * findClass
+  * resolveClass -> resolveClass0
+
+* java.lang.Class.java
+  * forName0
+
+**hotspot**
+
+* /jdk/src/share/native/java/lang/ClassLoader.c
+  * Java_java_lang_ClassLoader_findLoadedClass0
+  * Java_java_lang_ClassLoader_defineClass0
+  * Java_java_lang_ClassLoader_resolveClass0
+* /hotspot/src/share/vm/prims/jvm.cpp
+  * JVM_ENTRY(jclass, JVM_FindLoadedClass(...))
+  * JVM_ENTRY(jclass, JVM_DefineClass(...))
+  * JVM_ENTRY(void, JVM_ResolveClass(...))
+  * JVM_ENTRY(jclass, JVM_FindClassFromCaller(...))
+* /hotspot/src/share/vm/classfile/systemDictionary.cpp
+  * SystemDictionary::find_class
+  * SystemDictionary::resolve_or_null
+  * SystemDictionary::find_instance_or_array_klass
+  * SystemDictionary::find
+
+* /hotspot/src/share/vm/utilities/hashtable.hpp
+  * compute_hash
+  * DictionaryEntry:equals
+* /jdk/src/share/native/java/lang/Class.c
+  * Java_java_lang_Class_forName0
+    * JVM_FindClassFromCaller
+    * find_class_from_class_loader
+
 ## 2.一些测试
 
 自定义类加载器**CustomClassLoader**
