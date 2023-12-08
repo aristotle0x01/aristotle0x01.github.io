@@ -278,10 +278,155 @@ class Example4 {
 * 具有类继承关系对象方法，其在method table内的索引保持不变
 * 接口的方法实现，由于其不一定基于同一个基类，同一个方法索引可能不同，因此需要使用invokeinterface来区分
 
+## 3.method table 存在于何处，长什么样子[^3]？
 
+| <img src="https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/a09b2f3d-cea5-4a54-8a93-3f1d8580e7d0" alt="object layout" style="zoom:45%; float: left;" /> |
+| ------------------------------------------------------------ |
+
+上面**Data**作为一个java class，完成加载后，在jvm内部由一个instanceKlass对象表示，那么这个对象其在内存中的结构即如上图第二行所示。可以看到**VTable**紧接内存对象头之后，那么它到底是什么时候分配的，长度几何呢？我们来从 jdk8u源码一探究竟。
+
+a. <u>hotspot/src/share/vm/oops/instanceKlass.hpp</u>
+
+```c++
+static InstanceKlass* allocate_instance_klass(
+                                          ClassLoaderData* loader_data,
+                                          int vtable_len,
+                                          int itable_len,
+                                          int static_field_size,
+                                          int nonstatic_oop_map_size,
+                                          ReferenceType rt,
+                                          AccessFlags access_flags,
+                                          Symbol* name,
+                                          Klass* super_klass,
+                                          bool is_anonymous,
+                                          TRAPS);
+											<- ClassFileParser::parseClassFile
+```
+
+该方法分配一个InstanceKlass实例，由**ClassFileParser::parseClassFile**在类加载中完成**.class**文件解析后调用，以生成java类定义在jvm中的数据结构表达。上面有个关键参数**vtable_len**，即为java类中需要多态调用关系方法(一般为public/protected 型实例方法)的数量(实际是存储方法指针数组长度)。同理**itable_len**表示接口方法数量，暂且不表。
+
+b. **vtable_len**是怎么来的呢？
+
+<u>hotspot/src/share/vm/oops/klassVtable.cpp</u>
+
+由`klassVtable::compute_vtable_size_and_num_mirandas`在`parseClassFile`中完成，在分配`allocate_instance_klass`之前。内部逻辑不赘述，其长度为父类**vtable_len**和本类相关方法长度之和。
+
+c. **allocate_instance_klass**实现
+
+```c++
+int size = InstanceKlass::size(vtable_len, itable_len, nonstatic_oop_map_size,
+                                 access_flags.is_interface(), is_anonymous);
+  // Allocation
+	// normal class
+      ik = new (loader_data, size, THREAD) InstanceKlass(
+        vtable_len, itable_len, static_field_size, nonstatic_oop_map_size, rt,
+        access_flags, is_anonymous);
+  ......
+  return ik;
+}
+```
+
+首先可以看到**size**综合了各种长度，其次利用了c++中的**placement new**语义完成对象构造。这个**new**运算符重载在基类
+
+<u>hotspot/src/share/vm/oops/klass.hpp</u>中。
+
+d. **vtable**定义
+
+```c++
+// instanceKlass.hpp
+static int vtable_start_offset()    { return header_size(); }
+intptr_t* start_of_vtable() const        { return ((intptr_t*)this) + vtable_start_offset(); }
+static int vtable_length_offset()   { return offset_of(InstanceKlass, _vtable_len) / HeapWordSize; }
+```
+
+从上面的定义可以明确，vtable启始于对象header后。至此，vtable定义完成了，预留空间包含了父类和当前类方法，与前面的数组图示相符。接下来看是如何指向方法并且实现多态调用的。
+
+## 4.多态调用的实现
+
+先倒序罗列**vtable**初始化整体过程，再对其中重点方法加以说明。
+
+<u>hotspot/src/share/vm/oops/klassVtable.hpp</u>，说明klassVtable可以理解为一个helper，**vtable**实际仍然存在于**instanceKlass**实例中。
+
+```c++
+klassVtable::initialize_from_super(super)
+klassVtable::update_inherited_vtable
+	<- klassVtable::initialize_vtable
+  	<- instanceKlass::link_class_impl
+  		<- instanceKlass::eager_initialize_impl
+  			<- instanceKlass::eager_initialize
+  				<- SystemDictionary::parse_stream
+  					or 
+  				<- SystemDictionary::define_instance_class
+```
+
+**parse_stream**或者**define_instance_class**很显然是类加载过程的关键方法，上述调用路径并未穷尽所有，只是其中一种。
+
+首先，**initialize_from_super**将父类**vtable**内容完整拷贝到当前类：
+
+```c++
+// Copy super class's vtable to the first part (prefix) of this class's vtable
+int klassVtable::initialize_from_super(KlassHandle super) {
+  // copy methods from superKlass
+    assert(super->oop_is_instance(), "must be instance klass");
+    InstanceKlass* sk = (InstanceKlass*)super();
+    klassVtable* superVtable = sk->vtable();
+    superVtable->copy_vtable_to(table());
+    ......
+    return superVtable->length();
+}
+
+void klassVtable::copy_vtable_to(vtableEntry* start) {
+  Copy::disjoint_words((HeapWord*)table(), (HeapWord*)start, _length * vtableEntry::size());
+}
+```
+
+其次，**update_inherited_vtable**根据方法名和签名决定是否覆盖父类方法，否则新增放入**vtable**：
+
+```c++
+// Update child's copy of super vtable for overrides
+// OR return true if a new vtable entry is required.
+// Only called for InstanceKlass's, i.e. not for arrays
+// If that changed, could not use _klass as handle for klass
+bool klassVtable::update_inherited_vtable(InstanceKlass* klass, methodHandle target_method,
+                                          int super_vtable_len, int default_index,
+                                          bool checkconstraints, TRAPS) {
+  bool allocate_new = true;
+
+  Symbol* name = target_method()->name();
+  Symbol* signature = target_method()->signature();
+  
+  Symbol* target_classname = target_klass->name();
+  for(int i = 0; i < super_vtable_len; i++) {
+    Method* super_method;
+    if (is_preinitialized_vtable()) {
+      // If this is a shared class, the vtable is already in the final state (fully
+      // initialized). Need to look at the super's vtable.
+      klassVtable* superVtable = super->vtable();
+      super_method = superVtable->method_at(i);
+    } else {
+      super_method = method_at(i);
+    }
+    // Check if method name matches
+    if (super_method->name() == name && super_method->signature() == signature) {
+       ......
+       put_method_at(target_method(), i);
+       if (!is_default) {
+         target_method()->set_vtable_index(i);
+       } 
+        ......
+      } 
+    }
+  }
+  return allocate_new;
+}
+```
+
+至此，也就完成了**vtable**的初始化。对象实例在调用某个方法时，根据头部类指针回溯到当前类**instanceKlass**，再从**vtable**索引找到方法实际指针，若为覆盖则调用基类方法，若已覆盖则调用当前类 方法 ，从而实现多态。
 
 ## 5.references
 
 [^1]: [Inside the Java Virtual Machine: by Bill Venners](https://www.artima.com/insidejvm/ed2/index.html)
 [^2]: [Chapter 8 of Inside the Java Virtual Machine The Linking Model](https://www.artima.com/insidejvm/ed2/linkmod12.html)
+
+[^3]:  [Dissecting the Java Virtual Machine - Architecture - part 3](https://martin-toshev.com/index.php/software-engineering/architectures/80-dissecting-the-java-virtual-machine)
 
