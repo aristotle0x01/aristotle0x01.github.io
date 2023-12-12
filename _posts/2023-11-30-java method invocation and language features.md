@@ -339,6 +339,23 @@ intptr_t* start_of_vtable() const        { return ((intptr_t*)this) + vtable_sta
 static int vtable_length_offset()   { return offset_of(InstanceKlass, _vtable_len) / HeapWordSize; }
 ```
 
+e. 方法排序规则
+
+vtable中方法并不是按照名称升序排列的，而是按照名称对象内存地址排序的：
+
+```c++
+ClassFileParser::parseClassFile
+  -> sort_methods(methods)
+  	-> Method::sort_methods(methods)
+  		-> a->name()->fast_compare(b->name())
+  			-> Symbol::fast_compare
+
+int Symbol::fast_compare(Symbol* other) const {
+ return (((uintptr_t)this < (uintptr_t)other) ? -1
+   : ((uintptr_t)this == (uintptr_t) other) ? 0 : 1);
+}
+```
+
 从上面的定义可以明确，vtable启始于对象header后。至此，vtable定义完成了，预留空间包含了父类和当前类方法，与前面的数组图示相符。接下来看是如何指向方法并且实现多态调用的。
 
 ## 4.多态调用的实现
@@ -421,12 +438,39 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, methodHandle tar
 }
 ```
 
-至此，也就完成了**vtable**的初始化。对象实例在调用某个方法时，根据头部类指针回溯到当前类**instanceKlass**，再从**vtable**索引找到方法实际指针，若为覆盖则调用基类方法，若已覆盖则调用当前类 方法 ，从而实现多态。
+至此，也就完成了**vtable**的初始化。对象实例在调用某个方法时，根据头部类指针回溯到当前类**instanceKlass**，再从**vtable**索引找到方法实际指针，若为覆盖则调用基类方法，若已覆盖则调用当前类方法 ，从而实现多态。
 
-## 5.references
+## 5.接口方法调用
+
+**1.2**小节的代码示例提到了**invokeinterface**:
+
+```java
+Subclass2 sc = new Subclass2(0); 
+sc.interfaceMethod(); // invokevirtual
+
+InYourFace iyf = sc;
+iyf.interfaceMethod();  // invokeinterface
+```
+
+为什么要有上述区分呢？
+
+> Direct references to instance variables and instance methods are offsets. A direct reference to an instance variable is likely the offset from the start of the object's image to the location of the instance variable. A direct reference to an instance method is likely an offset into a method table.
+>
+> Using offsets to represent direct references to instance variables and instance methods depends on a predictable ordering of the fields in a class's object image and the methods in a class's method table. Although implementation designers may choose any way of placing instance variables into an object image or methods into a method table, they will almost certainly use the same way for all types. Therefore, in any one implementation, the ordering of fields in an object and methods in a method table is defined and predictable.[^2]
+
+上面这段话的意思是当方法调用完成解析后(resolution)，对于任何实例(instance)调用，方法的偏移量(offset)是确定的。而如果调用静态类型是接口时，其方法偏移量是不确定的，因而基于接口引用的方法调用一般而言要慢一些。
+
+| <img src="../img/class_interface_hierarchy.png" alt="cat layout" style="zoom:70%; float: left;" /> | 依照左图类和接口的继承关系，类C和类E的method table中，Interface A的方法索引显然无法保持一致 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+
+* 静态类型决定字节码编译结果，同样一个方法，调用类型是class时**invokevirtual**，调用类型是interface时**invokeinterface**
+* 多态调用有两种：基于继承，基于接口
+
+
+
+## 6.references
 
 [^1]: [Inside the Java Virtual Machine: by Bill Venners](https://www.artima.com/insidejvm/ed2/index.html)
 [^2]: [Chapter 8 of Inside the Java Virtual Machine The Linking Model](https://www.artima.com/insidejvm/ed2/linkmod12.html)
-
 [^3]:  [Dissecting the Java Virtual Machine - Architecture - part 3](https://martin-toshev.com/index.php/software-engineering/architectures/80-dissecting-the-java-virtual-machine)
 
