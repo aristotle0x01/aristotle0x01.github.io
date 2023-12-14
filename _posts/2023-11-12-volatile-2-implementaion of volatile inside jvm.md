@@ -17,8 +17,6 @@ tags:
 
 既然**jitwatch**可以查看**JIT**编译后的机器码，那么应该可以调戏volatile变量，对其进行读写，然后看看产生的**内存屏障(memory barrier)**到底是什么样的？能看到**loadload, loadstore, storeload, storestore**对应的指令吗？
 
-<br/>
-
 ## 1.JIT编译后的屏障是什么样的？
 
 环境：jdk1.8, Intel Core i5
@@ -28,8 +26,6 @@ tags:
 | **volatile write** | <img src="https://user-images.githubusercontent.com/2216435/282236758-23b5d644-65b6-4d6c-95b5-0bd935d95d4c.png" alt="write" style="zoom:50%; float: left;" /> |
 
 可见在x86架构下，JIT编译后的代码，仅在写时(更精确是**storeload**)会生成**mem bar**。
-
-<br/>
 
 ## 2.内存屏障分类
 
@@ -66,8 +62,6 @@ tags:
   | ------------------------------------------------------------ |
   | <img src="https://user-images.githubusercontent.com/2216435/282244955-8f7f176a-428c-445b-b8d5-49676a4d8b46.png" alt="comment out" style="zoom:100%; float: left;" /> |
 
-<br/>
-
 ## 3. 内存屏障的实现
 
 ### 3.1 屏障定义[^4]
@@ -87,10 +81,7 @@ class OrderAccess : public AllStatic {
   static void     fence();
   ...
 };
-
 ```
-
-<br/>
 
 ### 3.2 x86平台下linux实现
 
@@ -129,16 +120,12 @@ inline void OrderAccess::fence() {
 | ------------------------------------------------------------ |
 | <img src="https://user-images.githubusercontent.com/2216435/282245622-80529551-b94f-4143-b771-919c80dbf9eb.png" alt="cache coherence of platforms" style="zoom:40%; float: left;" /> |
 
-<br/>
-
 ### 3.3 `__asm__ volatile`含义[^5]
 
 * `__asm__`表示在c语言中嵌入汇编代码
 * `__asm__ volatile`表示不允许优化器删除，cache，乱序等
 * `__asm__ volatile ("" : : : "memory")`禁止编译器指令重排
 * `__asm__ volatile ("lock; addl $0,0(%%esp)" : : : "cc", "memory")` 表示`lock; addl $0,0(%%esp)`适用上述限制
-
-<br/>
 
 ### 3.4 x86屏障指令
 
@@ -149,8 +136,6 @@ inline void OrderAccess::fence() {
 - **MFENCE**—指令将程序指令流中在其之前发生的所有存储（写入）和加载（读取）操作进行序列化
 - **LOCK**—在多处理器环境中，LOCK指令防止读写重排，并独占共享内存且完成原子化操作。<u>Locked instructions have a total order</u> [^6]。一般而言lock性能较高，会替代**MFENCE**使用。
 
-<br/>
-
 ## 4.volatile变量读写实现[^7]
 
 ### 4.1 字节码实现
@@ -160,8 +145,6 @@ inline void OrderAccess::fence() {
 | volatile变量读写的字节码编译                                 |
 | ------------------------------------------------------------ |
 | <img src="https://user-images.githubusercontent.com/2216435/282274605-667a6613-78a2-4994-bead-16cf445f3328.png" alt="cache coherence of platforms" style="zoom:60%; float: left;" /> |
-
-<br/>
 
 ### 4.2 jvm实现(x86)
 
@@ -244,8 +227,6 @@ enum Membar_mask_bits {
 ```
 
 可见只对**StoreLoad**加了屏障(基于**lock**实现)，其它几个屏障在cpu指令层面是不需要的，也与前面**OrderAccess**实现一致。
-
-<br/>
 
 ## 5.references
 

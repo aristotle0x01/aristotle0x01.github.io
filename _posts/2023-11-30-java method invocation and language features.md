@@ -460,7 +460,7 @@ iyf.interfaceMethod();  // invokeinterface
 
 上面这段话的意思是当方法调用完成解析后(resolution)，对于任何实例(instance)调用，方法的偏移量(offset)是确定的。而如果调用静态类型是接口时，其方法偏移量是不确定的，因而基于接口引用的方法调用一般而言要慢一些。
 
-| <img src="../img/class_interface_hierarchy.png" alt="cat layout" style="zoom:70%; float: left;" /> | 依照左图类和接口的继承关系，类C和类E的method table中，Interface A的方法索引显然无法保持一致 |
+| <img src="https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/2e443009-27d1-4282-b0e4-6532ca77c81f" alt="class hierarchy" style="zoom:70%; float: left;" /> | 依照左图类和接口的继承关系，类C和类E的method table中，Interface A的方法索引显然无法保持一致 |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
 * 静态类型决定字节码编译结果，同样一个方法，调用类型是class时**invokevirtual**，调用类型是interface时**invokeinterface**
