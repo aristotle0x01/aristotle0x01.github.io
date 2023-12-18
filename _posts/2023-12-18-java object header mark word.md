@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "java object header markword实现的诡异(openjdk8u)"
-date:   2023-12-06
+title:  "java object header markword诡异的实现(openjdk8u)"
+date:   2023-12-18
 catalog: true
 tags:
     - jvm
