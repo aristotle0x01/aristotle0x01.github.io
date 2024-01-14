@@ -423,6 +423,10 @@ run Interpret
 
 ![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/39b5f4b8-2c4c-460a-b05b-ba4644b96195)
 
+<u>hotspot/src/share/vm/interpreter/templateTable.cpp</u>
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/ad435adb-30c0-42ef-bb75-541bb7c6aaaa)
+
 负责字节码跳转的汇编代码在<u>hotspot/src/cpu/x86/vm/interp_masm_x86_64.cpp</u>
 
 ```c++
