@@ -358,3 +358,168 @@ p ((Method*)($rbx))->name() // int_static_test_method
 图示2:
 
 ![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/076b5b63-adec-46ec-b547-2d4453e381f8)
+
+## 5.栈帧
+
+在[1.invokestatic的汇编实现](#1.invokestatic的汇编实现)中出现实现过程中，有两处涉及帧偏移量的引用：
+
+```c++
+// 代码具体位置可自行搜索
+movptr(Address(rbp, frame::interpreter_frame_bcx_offset * wordSize), r13);
+// 在invokestatic实现中，该行代码意味着即将调用一个静态方法时，需要从当前方法帧获取常量池指针，以进一步拿到静态方法信息
+// rbp是当前栈帧基址
+movptr(cache, Address(rbp, frame::interpreter_frame_cache_offset * wordSize));
+```
+
+那么上面的frame::interpreter_frame_***_offset是什么呢？<u>hotspot/src/cpu/x86/vm/frame_x86.hpp</u>
+
+```c++
+enum {
+    pc_return_offset                                 =  0,
+    // All frames
+    link_offset                                      =  0,
+    return_addr_offset                               =  1,
+    // non-interpreter frames
+    sender_sp_offset                                 =  2,
+    
+    // Interpreter frames
+    interpreter_frame_result_handler_offset          =  3, // for native calls only
+    interpreter_frame_oop_temp_offset                =  2, // for native calls only
+
+    interpreter_frame_sender_sp_offset               = -1,
+    // outgoing sp before a call to an invoked method
+    interpreter_frame_last_sp_offset                 = interpreter_frame_sender_sp_offset - 1,
+    interpreter_frame_method_offset                  = interpreter_frame_last_sp_offset - 1,
+    interpreter_frame_mdx_offset                     = interpreter_frame_method_offset - 1,
+    interpreter_frame_cache_offset                   = interpreter_frame_mdx_offset - 1,
+    interpreter_frame_locals_offset                  = interpreter_frame_cache_offset - 1,
+    interpreter_frame_bcx_offset                     = interpreter_frame_locals_offset - 1,
+    interpreter_frame_initial_sp_offset              = interpreter_frame_bcx_offset - 1,
+    interpreter_frame_monitor_block_top_offset       = interpreter_frame_initial_sp_offset,
+    interpreter_frame_monitor_block_bottom_offset    = interpreter_frame_initial_sp_offset,
+		......
+  };
+```
+
+调用参数由当前方法传递，而被调用java静态方法栈帧由zerolocals类型方法解释器入口**generate_normal_entry**准备，更准确的说其中固定部分由**generate_fixed_frame**准备。我们可以分析上面**frame::_offset**定义与**generate_fixed_frame**对应关系，如下图：
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/6c65296b-0f22-42c2-84da-b01bf8027824)
+
+根据上面的分析，我们可以看出，不论是从C++进入java main方法(上一篇博文)，还是invokestatic之类的字节码形式方法调用，最终殊途同归，都进入到相应类型入口**generate_normal_entry**，帧也必然相同。
+
+## 6.栈帧的简单验证
+
+简单查验传参，方法内局部变量在栈内情况
+
+### 6.1 验证程序
+
+```java
+public class InterpretStatic {
+    public static void main(String[] args) {
+        int i = 1;
+        int j = 2;
+        InterpretStatic.int_static_test_method(i, j);
+    }
+
+    public static int int_static_test_method(int i, int j) {
+        int a = i+j;
+        return a;
+    }
+}
+```
+
+编译结果：
+
+```java
+public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=1
+         0: iconst_1
+         1: istore_1
+         2: iconst_2
+         3: istore_2
+         4: iload_1
+         5: iload_2
+         6: invokestatic  #2                  // Method int_static_test_method:(II)I
+         9: pop
+        10: return
+
+  public static int int_static_test_method(int, int);
+    descriptor: (II)I
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=2
+         0: iload_0
+         1: iload_1
+         2: iadd
+         3: istore_2
+         4: iload_2
+         5: ireturn
+```
+
+### 6.2 栈帧分析
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/fb4f0514-687e-4912-bdf2-9876119679de)
+
+### 6.3 debug过程
+
+思路：查验栈帧中入参和局部变量在执行过程的变化
+
+* 在main方法即将执行**int_static_test_method**时，方法入参情况
+* 进入int_static_test_method后，执行完istore_2，局部变量a完成赋值，查验该处内存
+* 断点打在**zerolocals**和**iload_2**入口处即可
+
+```shell
+gdb /var/shared/openjdk/build/linux-x86_64-normal-server-slowdebug/jdk/bin/java
+
+// 第一轮：保留入口点内存地址0x00007fffe1043690
+run -XX:+PrintInterpreter InterpretStatic | grep -E -A 2000 'invokestatic|zerolocals' > static.log
+run -XX:+PrintInterpreter InterpretStatic | grep -E -A 20 'invokestatic|zerolocals'
+
+// jdk/src/share/bin/java.c
+// 首先打且仅打该断点
+b java.c:472 // breakpoint 1
+
+run InterpretStatic
+
+// 查验信息
+p 'TemplateInterpreter::_active_table'.table_for(vtos)[184]
+p 'AbstractInterpreter::_entry_table'[0]  // zerolocals 0x00007fffe101e2e0
+
+// 再次断点
+b *0x00007fffe1043690 // invokestatic vtos入口
+// 查验信息
+p (unsigned char)*($r13) // invokestatic
+p (unsigned char)*($r13+1)
+p (unsigned char)*($r13+2)
+p (unsigned char)*($r13+3) // pop
+p (unsigned char)*($r13+4) // return
+
+// 再次断点，即将进入解释器入口zerolocals
+b *0x00007fffe101e2e0 // zerolocals
+p ((Method*)($rbx))->name() // int_static_test_method
+// 单步执行到0x7fffe101e443处：test   %edx,%edx 即将分配方法内局部变量
+// 此时验证入参
+p /x $rsp
+$39 = 0x7ffff7fe9728
+p *0x7ffff7fe9728
+$40 = 2
+p *(0x7ffff7fe9728+8)
+$41 = 1
+p *(0x7ffff7fe9728-8)
+$42 = 0
+
+p 'TemplateInterpreter::_active_table'.table_for(vtos)[28] // iload_2 0x7fffe102d8f0
+b *0x7fffe102d8f0 // iload_2 vtos入口
+
+p *(0x7ffff7fe9720) // int_static_test_method局部变量a地址
+$44 = 3
+```
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/b54430ab-bae4-4fa3-b9bb-835cbb31ed3d)
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/2175a18a-7ef6-487d-9ff3-16835b18d794)
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/4cac1736-3e21-4d0f-b51a-884a0d20470f)

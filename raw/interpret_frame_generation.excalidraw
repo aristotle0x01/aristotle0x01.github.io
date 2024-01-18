@@ -1,0 +1,413 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "71QJBg12E61mQpO5m06ek",
+      "type": "text",
+      "x": 136.784912109375,
+      "y": 94.59408569335938,
+      "width": 843.75,
+      "height": 480,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "seed": 915470211,
+      "version": 230,
+      "versionNonce": 367461603,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705561755667,
+      "link": null,
+      "locked": false,
+      "text": "// A frame represents a physical stack frame (an activation).  Frames can be\n// C or Java frames, and the Java frames can be interpreted or compiled.\n// In contrast, vframes represent source-level activations, so that one physical frame\n// can correspond to multiple source level frames because of inlining.\n// A frame is comprised of {pc, fp, sp}\n// ------------------------------ Asm interpreter ----------------------------------------\n// Layout of asm interpreter frame:\n//    [expression stack      ] * <- sp\n//    [monitors              ]   \\\n//     ...                        | monitor block size\n//    [monitors              ]   /\n//    [monitor block size    ]\n//    [byte code index/pointr]                   = bcx()                bcx_offset\n//    [pointer to locals     ]                   = locals()             locals_offset\n//    [constant pool cache   ]                   = cache()              cache_offset\n//    [methodData            ]                   = mdp()                mdx_offset\n//    [Method*               ]                   = method()             method_offset\n//    [last sp               ]                   = last_sp()            last_sp_offset\n//    [old stack pointer     ]                     (sender_sp)          sender_sp_offset\n//    [old frame pointer     ]   <- fp           = link()\n//    [return pc             ]\n//    [oop temp              ]                     (only for native calls)\n//    [locals and parameters ]\n//                               <- sender sp\n// ------------------------------ Asm interpreter ----------------------------------------",
+      "fontSize": 16,
+      "fontFamily": 3,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "baseline": 476,
+      "containerId": null,
+      "originalText": "// A frame represents a physical stack frame (an activation).  Frames can be\n// C or Java frames, and the Java frames can be interpreted or compiled.\n// In contrast, vframes represent source-level activations, so that one physical frame\n// can correspond to multiple source level frames because of inlining.\n// A frame is comprised of {pc, fp, sp}\n// ------------------------------ Asm interpreter ----------------------------------------\n// Layout of asm interpreter frame:\n//    [expression stack      ] * <- sp\n//    [monitors              ]   \\\n//     ...                        | monitor block size\n//    [monitors              ]   /\n//    [monitor block size    ]\n//    [byte code index/pointr]                   = bcx()                bcx_offset\n//    [pointer to locals     ]                   = locals()             locals_offset\n//    [constant pool cache   ]                   = cache()              cache_offset\n//    [methodData            ]                   = mdp()                mdx_offset\n//    [Method*               ]                   = method()             method_offset\n//    [last sp               ]                   = last_sp()            last_sp_offset\n//    [old stack pointer     ]                     (sender_sp)          sender_sp_offset\n//    [old frame pointer     ]   <- fp           = link()\n//    [return pc             ]\n//    [oop temp              ]                     (only for native calls)\n//    [locals and parameters ]\n//                               <- sender sp\n// ------------------------------ Asm interpreter ----------------------------------------",
+      "lineHeight": 1.2
+    },
+    {
+      "id": "P4uqlnI_7c3mRxTurAMx_",
+      "type": "text",
+      "x": 1088.9112548828125,
+      "y": 2.504913330078125,
+      "width": 750,
+      "height": 825.6,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "seed": 719612867,
+      "version": 205,
+      "versionNonce": 1429253709,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705561866386,
+      "link": null,
+      "locked": false,
+      "text": "// Generate a fixed interpreter frame. This is identical setup for\n// interpreted methods and for native methods hence the shared code.\n//\n// Args:\n//      rax: return address\n//      rbx: Method*\n//      r14: pointer to locals\n//      r13: sender sp\n//      rdx: cp cache\nvoid TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {\n  // initialize fixed part of activation frame\n  __ push(rax);        // save return address\n  __ enter();          // save old & set new rbp\n  __ push(r13);        // set sender sp\n  __ push((int)NULL_WORD); // leave last_sp as null\n  __ movptr(r13, Address(rbx, Method::const_offset()));      // get ConstMethod*\n  __ lea(r13, Address(r13, ConstMethod::codes_offset())); // get codebase\n  __ push(rbx);        // save Method*\n  if (ProfileInterpreter) {\n    Label method_data_continue;\n    __ movptr(rdx, Address(rbx, in_bytes(Method::method_data_offset())));\n    __ testptr(rdx, rdx);\n    __ jcc(Assembler::zero, method_data_continue);\n    __ addptr(rdx, in_bytes(MethodData::data_offset()));\n    __ bind(method_data_continue);\n    __ push(rdx);      // set the mdp (method data pointer)\n  } else {\n    __ push(0);\n  }\n\n  __ movptr(rdx, Address(rbx, Method::const_offset()));\n  __ movptr(rdx, Address(rdx, ConstMethod::constants_offset()));\n  __ movptr(rdx, Address(rdx, ConstantPool::cache_offset_in_bytes()));\n  __ push(rdx); // set constant pool cache\n  __ push(r14); // set locals pointer\n  if (native_call) {\n    __ push(0); // no bcp\n  } else {\n    __ push(r13); // set bcp\n  }\n  __ push(0); // reserve word for pointer to expression stack bottom\n  __ movptr(Address(rsp, 0), rsp); // set expression stack bottom\n}",
+      "fontSize": 16,
+      "fontFamily": 3,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "baseline": 821,
+      "containerId": null,
+      "originalText": "// Generate a fixed interpreter frame. This is identical setup for\n// interpreted methods and for native methods hence the shared code.\n//\n// Args:\n//      rax: return address\n//      rbx: Method*\n//      r14: pointer to locals\n//      r13: sender sp\n//      rdx: cp cache\nvoid TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {\n  // initialize fixed part of activation frame\n  __ push(rax);        // save return address\n  __ enter();          // save old & set new rbp\n  __ push(r13);        // set sender sp\n  __ push((int)NULL_WORD); // leave last_sp as null\n  __ movptr(r13, Address(rbx, Method::const_offset()));      // get ConstMethod*\n  __ lea(r13, Address(r13, ConstMethod::codes_offset())); // get codebase\n  __ push(rbx);        // save Method*\n  if (ProfileInterpreter) {\n    Label method_data_continue;\n    __ movptr(rdx, Address(rbx, in_bytes(Method::method_data_offset())));\n    __ testptr(rdx, rdx);\n    __ jcc(Assembler::zero, method_data_continue);\n    __ addptr(rdx, in_bytes(MethodData::data_offset()));\n    __ bind(method_data_continue);\n    __ push(rdx);      // set the mdp (method data pointer)\n  } else {\n    __ push(0);\n  }\n\n  __ movptr(rdx, Address(rbx, Method::const_offset()));\n  __ movptr(rdx, Address(rdx, ConstMethod::constants_offset()));\n  __ movptr(rdx, Address(rdx, ConstantPool::cache_offset_in_bytes()));\n  __ push(rdx); // set constant pool cache\n  __ push(r14); // set locals pointer\n  if (native_call) {\n    __ push(0); // no bcp\n  } else {\n    __ push(r13); // set bcp\n  }\n  __ push(0); // reserve word for pointer to expression stack bottom\n  __ movptr(Address(rsp, 0), rsp); // set expression stack bottom\n}",
+      "lineHeight": 1.2
+    },
+    {
+      "id": "stb3Zm-SnUUrjDNIN5Lef",
+      "type": "arrow",
+      "x": 1113.3270263671875,
+      "y": 228.9783935546875,
+      "width": 697.0409545898438,
+      "height": 261.37603759765625,
+      "angle": 0,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1806161261,
+      "version": 254,
+      "versionNonce": 400650403,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705561973708,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -155.5872802734375,
+          237.12579345703125
+        ],
+        [
+          -697.0409545898438,
+          261.37603759765625
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": null,
+      "endBinding": null,
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    },
+    {
+      "id": "VnZlY-0rz5VPfmlPEfvbK",
+      "type": "arrow",
+      "x": 1114.8719482421875,
+      "y": 344.5955810546875,
+      "width": 180.88885498046875,
+      "height": 69.6197509765625,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 186135917,
+      "version": 178,
+      "versionNonce": 600850477,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705562012900,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -111.0579833984375,
+          61.270751953125
+        ],
+        [
+          -180.88885498046875,
+          69.6197509765625
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": null,
+      "endBinding": null,
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    },
+    {
+      "id": "AtanSJdxlIwdri4JB3KIf",
+      "type": "arrow",
+      "x": 1133.09130859375,
+      "y": 494.460205078125,
+      "width": 227.80389404296875,
+      "height": 101.74884033203125,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1784821859,
+      "version": 111,
+      "versionNonce": 686807843,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705562031720,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -79.57659912109375,
+          -84.704345703125
+        ],
+        [
+          -227.80389404296875,
+          -101.74884033203125
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": null,
+      "endBinding": null,
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    },
+    {
+      "id": "QGikIKy-kYor9jG__AOMj",
+      "type": "arrow",
+      "x": 1110.4405517578125,
+      "y": 648.4507446289062,
+      "width": 182.951171875,
+      "height": 277.9549560546875,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 2114978541,
+      "version": 250,
+      "versionNonce": 1502108237,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705562075209,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -42.801513671875,
+          -196.7420654296875
+        ],
+        [
+          -182.951171875,
+          -277.9549560546875
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": null,
+      "endBinding": null,
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    },
+    {
+      "id": "CpuEaozkObgs2UgQWLQNg",
+      "type": "arrow",
+      "x": 1129.7352294921875,
+      "y": 744.1950073242188,
+      "width": 223.44757080078125,
+      "height": 411.87152099609375,
+      "angle": 0,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 934962339,
+      "version": 233,
+      "versionNonce": 1288933699,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705562109353,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -94.695068359375,
+          -380.8131408691406
+        ],
+        [
+          -223.44757080078125,
+          -411.87152099609375
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": null,
+      "endBinding": null,
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    },
+    {
+      "id": "x-_FTKTM1yqj7OL3mxbiK",
+      "type": "text",
+      "x": 725.9903564453125,
+      "y": 257.12420043945315,
+      "width": 220.625,
+      "height": 24,
+      "angle": 0,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "seed": 1006724963,
+      "version": 127,
+      "versionNonce": 1651105613,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "id": "DL--1S6Bvck4bioY12Gmg",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1705562155520,
+      "link": null,
+      "locked": false,
+      "text": "synchronized方法独有",
+      "fontSize": 20,
+      "fontFamily": 3,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "baseline": 20,
+      "containerId": null,
+      "originalText": "synchronized方法独有",
+      "lineHeight": 1.2
+    },
+    {
+      "id": "DL--1S6Bvck4bioY12Gmg",
+      "type": "arrow",
+      "x": 717.5806274414062,
+      "y": 274.9451904296875,
+      "width": 69.07525634765625,
+      "height": 2.021392822265625,
+      "angle": 0,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 282418669,
+      "version": 71,
+      "versionNonce": 1230963949,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1705562155520,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -69.07525634765625,
+          2.021392822265625
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": {
+        "elementId": "x-_FTKTM1yqj7OL3mxbiK",
+        "focus": -0.15410587301543938,
+        "gap": 8.40972900390625
+      },
+      "endBinding": null,
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    }
+  ],
+  "appState": {
+    "gridSize": null,
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
