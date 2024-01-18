@@ -500,6 +500,8 @@ p (unsigned char)*($r13+4) // return
 // 再次断点，即将进入解释器入口zerolocals
 b *0x00007fffe101e2e0 // zerolocals
 p ((Method*)($rbx))->name() // int_static_test_method
+p $37->as_C_string()
+$38 = 0x7ffff00097e8 "int_static_test_method"
 // 单步执行到0x7fffe101e443处：test   %edx,%edx 即将分配方法内局部变量
 // 此时验证入参
 p /x $rsp
