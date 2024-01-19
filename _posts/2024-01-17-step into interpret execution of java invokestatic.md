@@ -525,3 +525,109 @@ $44 = 3
 ![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/2175a18a-7ef6-487d-9ff3-16835b18d794)
 
 ![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/4cac1736-3e21-4d0f-b51a-884a0d20470f)
+
+### 6.4 方法退出时栈帧变化
+
+#### 6.4.1 代码分析
+
+当方法**int_static_test_method**通过**invokestatic**在main函数内执行完毕时，栈是什么样子的呢？我们可以分析进入解释执行int_static_test_method时以及方法最后一个字节码**ireturn**对栈帧做了哪些操作。其中有两处关键：
+
+* **generate_fixed_frame**
+
+  ```c++
+  void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
+    // initialize fixed part of activation frame
+    __ push(rax);        // save return address
+    __ enter();          // save old & set new rbp
+    __ push(r13);        // set sender sp
+    __ push((int)NULL_WORD); // leave last_sp as null
+    __ movptr(r13, Address(rbx, Method::const_offset()));      // get ConstMethod*
+    __ lea(r13, Address(r13, ConstMethod::codes_offset())); // get codebase
+    __ push(rbx);        // save Method*
+    ......
+  ```
+
+* **ireturn**字节码实现**TemplateTable::_return**
+
+  ```c++
+  __ remove_activation(state, r13);
+  __ jmp(r13);
+  
+  // ----------------------------------------------
+  // __ remove_activation
+  // remove activation
+  // get sender sp
+  movptr(rbx, Address(rbp, frame::interpreter_frame_sender_sp_offset * wordSize));
+  leave();                           // remove frame anchor
+  pop(ret_addr);                     // get return address
+  mov(rsp, rbx);                     // set sp to sender sp
+  
+  // 上述代码编译后
+    0x00007fffe103dda4: mov    (%rsp),%eax
+    0x00007fffe103dda7: add    $0x8,%rsp
+    0x00007fffe103ddab: mov    -0x8(%rbp),%rbx
+    0x00007fffe103ddaf: leaveq 
+    0x00007fffe103ddb0: pop    %r13
+    0x00007fffe103ddb2: mov    %rbx,%rsp
+    0x00007fffe103ddb5: jmpq   *%r13
+  ```
+
+上面<span style="color:red">`__ push(r13);`</span>与<span style="color:red">`mov(rsp, rbx);`</span>是对应的，一个保存，一个恢复，图示：
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/e385e5d2-fa87-4f43-a7b1-3bb38b1525a3)
+
+入参由调用方准备，因此通过**ireturn**返回后，回到栈帧最后一个入参顶部是符合直觉逻辑的，中间部分全部销毁。
+
+#### 6.4.2 debug验证
+
+```shell
+
+gdb /var/shared/openjdk/build/linux-x86_64-normal-server-slowdebug/jdk/bin/java
+
+// 第一轮：保留入口点内存地址0x00007fffe1043690
+// 生成并保留汇编代码，以便于debug及断点
+run -XX:+PrintInterpreter InterpretStatic | grep -E -A 3000 'invokestatic|zerolocals|ireturn' > frame.log
+
+// jdk/src/share/bin/java.c
+// 首先打且仅打该断点
+b java.c:472 // breakpoint 1
+
+run InterpretStatic
+
+// 查验信息
+p 'TemplateInterpreter::_active_table'.table_for(itos)[172] // ireturn 0x7fffe103d487
+
+// 再次断点
+b *0x00007fffe1043690 // invokestatic vtos入口
+
+// 再次断点，即将进入解释器入口zerolocals
+b *0x00007fffe101e2e0 // zerolocals
+
+// 单步执行到0x7fffe101e443处：test   %edx,%edx 即将分配方法内局部变量
+// 此时验证保存的send sp
+p /x $r13 
+$25 = 0x7ffff7fe9728
+p *0x7ffff7fe9728
+$26 = 2
+p *(0x7ffff7fe9728+8)
+$27 = 1
+
+// ireturn返回时恢复栈帧
+b *0x00007fffe103ddb5
+(gdb) p /x $r13
+$28 = 0x7fffe10070f0
+(gdb) p /x $rsp
+$29 = 0x7ffff7fe9728
+(gdb) p /x *0x7ffff7fe9728
+$31 = 0x2
+```
+
+方法栈帧准备：
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/3499edbc-5ef3-49cb-a52c-47fb6b13d7c9)
+
+ireturn退出恢复：
+
+![image](https://github.com/aristotle0x01/aristotle0x01.github.io/assets/2216435/99e15769-42d7-4e44-8baa-40ce5679b76a)
+
+所以，所谓**sender sp**，可以理解为来者(调用方) stack pointer，即为入参栈顶
